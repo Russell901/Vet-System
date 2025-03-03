@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Vet-System (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Vet-System (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
