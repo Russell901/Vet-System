@@ -5,9 +5,162 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:Vet_System.Pages"
+    xmlns:model="using:Vet_System.Models"
     mc:Ignorable="d">
 
-    <Grid>
-        <TextBlock Text="Dashboard Page" Style="{StaticResource TitleTextBlockStyle}"/>
-    </Grid>
+    <Page.Resources>
+        <Style x:Key="StatCardStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Background" Value="{ThemeResource SystemAccentColor}"/>
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer Padding="32" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="32">
+                       <!-- Stats Cards -->
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Stats, Mode=OneWay}" 
+                            Grid.ColumnSpan="4">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                            </Grid>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="model:StatItem">
+                            <Border Style="{StaticResource StatCardStyle}"
+                                    Background="{ThemeResource AccentAAFillColorDefaultBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{x:Bind Title}" 
+                                                 Style="{StaticResource BodyTextBlockStyle}"
+                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{x:Bind Value}" 
+                                                 Style="{StaticResource SubtitleTextBlockStyle}"
+                                                 Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                                 Margin="0,8,0,0"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Column="1" 
+                                           Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
+                                           CornerRadius="20"
+                                           Width="40" 
+                                           Height="40">
+                                        <FontIcon Glyph="{x:Bind Icon}" 
+                                                FontSize="24"
+                                                Foreground="{x:Bind IconColor}"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+
+            <!-- Main Content -->
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Upcoming Appointments -->
+                <Border Grid.Column="0" 
+                       Style="{StaticResource StatCardStyle}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Upcoming Appointments" 
+                                 Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <ListView ItemsSource="{x:Bind ViewModel.Appointments, Mode=OneWay}"
+                                 SelectionMode="None"
+                                 IsItemClickEnabled="True"
+                                 ItemClick="{x:Bind ViewModel.OnAppointmentClick}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="model:AppointmentItem">
+                                    <Grid Padding="8" ColumnSpacing="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <PersonPicture Width="40" 
+                                                     Height="40"
+                                                     DisplayName="{x:Bind PatientName}"/>
+
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{x:Bind PatientName}"
+                                                     Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                                            <TextBlock Text="{x:Bind Description}"
+                                                     Style="{StaticResource CaptionTextBlockStyle}"
+                                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="2"
+                                                 Text="{x:Bind Time}"
+                                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+
+                <!-- Recent Activities -->
+                <Border Grid.Column="1" 
+                       Style="{StaticResource StatCardStyle}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Recent Activities" 
+                                 Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.Activities, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="model:ActivityItem">
+                                    <StackPanel Margin="0,0,0,12">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Ellipse Width="8" 
+                                                    Height="8" 
+                                                    Fill="{ThemeResource SystemAccentColor}"
+                                                    VerticalAlignment="Center"/>
+                                            <TextBlock Text="{x:Bind Text}" 
+                                                     TextWrapping="Wrap"
+                                                     Style="{StaticResource BodyTextBlockStyle}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{x:Bind Time}" 
+                                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                 Margin="16,4,0,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </Page>

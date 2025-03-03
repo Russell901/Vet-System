@@ -4,12 +4,180 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Vet_System.Pages"
+    xmlns:models="using:Vet_System.Models"
+    xmlns:converters="using:Vet_System.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
+    mc:Ignorable="d">
 
-    <Grid>
-        <TextBlock Text="Patients Page" Style="{StaticResource TitleTextBlockStyle}"/>
+    <Page.Resources>
+        <converters:UriToImageSourceConverter x:Key="UriToImageSourceConverter"/>
+        <Style x:Key="PetCardStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}"/>
+            <Setter Property="Shadow">
+                <Setter.Value>
+                    <ThemeShadow />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SearchBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="{ThemeResource ControlFillColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="PlaceholderText" Value="Search patients..."/>
+            <Setter Property="Padding" Value="32,5,5,5"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid Padding="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Patients" 
+                      Style="{StaticResource TitleLargeTextBlockStyle}"
+                      VerticalAlignment="Center"/>
+
+            <Button Grid.Column="1"
+                    Command="{x:Bind ViewModel.AddPatientCommand}"
+                    Style="{StaticResource AccentButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE710;" FontSize="16"/>
+                    <TextBlock Text="Add Patient"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Search and Filter -->
+        <Grid Grid.Row="1" Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Search Box -->
+            <Grid Grid.Column="0" Margin="0,0,16,0">
+                <TextBox Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource SearchBoxStyle}"
+                         Padding="32,5,5,5"/>
+                <FontIcon Glyph="&#xE721;" 
+                          FontSize="16"
+                          Margin="8,0,0,0"
+                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Filter -->
+            <ComboBox Grid.Column="1"
+                      SelectedValue="{x:Bind ViewModel.FilterSpecies, Mode=TwoWay}"
+                      MinWidth="120">
+                <ComboBoxItem Content="All Species" Tag="all"/>
+                <ComboBoxItem Content="Dogs" Tag="dog"/>
+                <ComboBoxItem Content="Cats" Tag="cat"/>
+                <ComboBoxItem Content="Birds" Tag="bird"/>
+                <ComboBoxItem Content="Other" Tag="other"/>
+            </ComboBox>
+        </Grid>
+
+        <!-- Pet Cards -->
+        <ScrollViewer Grid.Row="2">
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.FilteredPets, Mode=OneWay}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="300"
+                                     MinItemHeight="400"
+                                     ItemsStretch="Fill"
+                                     MinRowSpacing="16"
+                                     MinColumnSpacing="16"/>
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="models:PetItem">
+                        <Border Style="{StaticResource PetCardStyle}"
+                                Translation="0,0,32">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="160"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Pet Image -->
+                                <Image Grid.Row="0" 
+                                       Source="{x:Bind ImageUrl, Converter={StaticResource UriToImageSourceConverter}}"
+                                       Stretch="UniformToFill"/>
+
+                                <!-- Details -->
+                                <StackPanel Grid.Row="1" Padding="16" Spacing="8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Text="{x:Bind Name}"
+                                                 Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                                        <Border Grid.Column="1"
+                                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="12"
+                                                Padding="8,4">
+                                            <TextBlock Text="{x:Bind Age}"
+                                                     Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                                     Style="{StaticResource CaptionTextBlockStyle}"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <TextBlock Text="{x:Bind SpeciesBreed}"
+                                             Style="{StaticResource BodyTextBlockStyle}"
+                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                                    <MenuFlyoutSeparator Margin="0,8"/>
+
+                                    <TextBlock Text="Owner"
+                                             Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                                    <TextBlock Text="{x:Bind Owner.Name}"
+                                             Style="{StaticResource BodyTextBlockStyle}"
+                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{x:Bind Owner.Phone}"
+                                             Style="{StaticResource BodyTextBlockStyle}"
+                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <HyperlinkButton Content="View Details"
+                                                       Command="{x:Bind ViewDetailsCommand}"/>
+
+                                        <TextBlock Grid.Column="1"
+                                                 Text="{x:Bind NextAppointmentDate}"
+                                                 Style="{StaticResource CaptionTextBlockStyle}"
+                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                 HorizontalAlignment="Right"
+                                                 VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
     </Grid>
 </Page>
