@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Vet_System.Components.Dialogs.AddPatientDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Vet_System.Components.Dialogs"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer MaxHeight="600">
+        <StackPanel Spacing="16" Padding="0,8">
+            <!-- Pet Information Section -->
+            <TextBlock Text="Pet Information" 
+                     Style="{ThemeResource BodyStrongTextBlockStyle}"
+                     Margin="0,0,0,8"/>
+
+            <TextBox Header="Pet Name"
+                     Text="{x:Bind ViewModel.PetName, Mode=TwoWay}"
+                     PlaceholderText="Enter pet's name"/>
+
+            <ComboBox Header="Species"
+                      SelectedItem="{x:Bind ViewModel.SelectedSpecies, Mode=TwoWay}"
+                      ItemsSource="{x:Bind ViewModel.SpeciesList}"
+                      PlaceholderText="Select species"
+                      Width="200"
+                      HorizontalAlignment="Left"/>
+
+            <TextBox Header="Breed"
+                     Text="{x:Bind ViewModel.Breed, Mode=TwoWay}"
+                     PlaceholderText="Enter breed"/>
+
+            <DatePicker Header="Date of Birth"
+                        SelectedDate="{x:Bind ViewModel.DateOfBirth, Mode=TwoWay}"
+                        YearVisible="True"/>
+
+            <!-- Owner Information Section -->
+            <TextBlock Text="Owner Information" 
+                     Style="{ThemeResource BodyStrongTextBlockStyle}"
+                     Margin="0,16,0,8"/>
+
+            <TextBox Header="Owner Name"
+                     Text="{x:Bind ViewModel.OwnerName, Mode=TwoWay}"
+                     PlaceholderText="Enter owner's name"/>
+
+            <TextBox Header="Phone Number"
+                     Text="{x:Bind ViewModel.PhoneNumber, Mode=TwoWay}"
+                     PlaceholderText="Enter phone number"/>
+
+            <TextBox Header="Email"
+                     Text="{x:Bind ViewModel.Email, Mode=TwoWay}"
+                     PlaceholderText="Enter email address"/>
+
+            <TextBox Header="Address"
+                     Text="{x:Bind ViewModel.Address, Mode=TwoWay}"
+                     PlaceholderText="Enter address"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     Height="80"/>
+
+            <!-- Additional Notes -->
+            <TextBox Header="Additional Notes"
+                     Text="{x:Bind ViewModel.Notes, Mode=TwoWay}"
+                     PlaceholderText="Enter any additional notes"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     Height="100"/>
+
+            <InfoBar IsOpen="{x:Bind ViewModel.HasValidationErrors, Mode=OneWay}"
+                     Severity="Error"
+                     Title="Validation Error"
+                     Message="{x:Bind ViewModel.ValidationMessage, Mode=OneWay}"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -13,10 +13,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Components\Dialogs\AddPatientDialog.xaml" />
     <None Remove="Components\Sidebar.xaml" />
     <None Remove="Pages\AppointmentsPage.xaml" />
     <None Remove="Pages\DashboardPage.xaml" />
     <None Remove="Pages\StaffPage.xaml" />
+    <None Remove="Styles\DialogStyles.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,6 +60,16 @@
     <Folder Include="Views\" />
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Styles\DialogStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Components\Dialogs\AddPatientDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="Pages\StaffPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -76,6 +88,14 @@
     <Page Update="Pages\DashboardPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+  </ItemGroup>
+  
+  <!--Output Directory-->
+
+  <ItemGroup>
+    <None Update="app.manifest">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <!--
