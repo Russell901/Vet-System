@@ -11,14 +11,14 @@ namespace Vet_System.Services
 
         public DialogService(XamlRoot xamlRoot)
         {
-            _xamlRoot = xamlRoot;
+            UpdateXamlRoot(xamlRoot);
         }
 
         public void UpdateXamlRoot(XamlRoot xamlRoot)
         {
             if (xamlRoot != null)
             {
-                _xamlRoot = xamlRoot;
+                _xamlRoot = xamlRoot ?? throw new ArgumentException(nameof(xamlRoot));
             }
         }
 

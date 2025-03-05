@@ -35,7 +35,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid Padding="24">
+    <Grid x:Name="ContentArea" Padding="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

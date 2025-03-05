@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Vet_System.Components.Dialogs;
@@ -16,7 +17,7 @@ namespace Vet_System.ViewModels
     {
         private readonly DatabaseService _databaseService;
         private readonly DialogService _dialogService;
-        private readonly Window mainWindow;
+        private readonly Window _mainWindow;
         private ContentDialog addPatientDialog;
 
         public XamlRoot XamlRoot
@@ -47,9 +48,6 @@ namespace Vet_System.ViewModels
         {
             get
             {
-                System.Diagnostics.Debug.WriteLine("Current Date and Time (UTC): 2025-03-05 19:06:34");
-                System.Diagnostics.Debug.WriteLine("Current User's Login: Russell901");
-
                 var query = allPets.AsEnumerable();
 
                 if (!string.IsNullOrEmpty(searchTerm))
@@ -70,14 +68,20 @@ namespace Vet_System.ViewModels
 
         public PatientsViewModel(Window window)
         {
-            mainWindow = window;
-            var xamlRoot = (window.Content as FrameworkElement)?.XamlRoot;
+            _mainWindow = window;
 
-            _dialogService = new DialogService(xamlRoot);
-            _databaseService = new DatabaseService(xamlRoot);
+            // Initialize services
+            if (window.Content is FrameworkElement element)
+            {
+                _xamlRoot = element.XamlRoot;
+                _dialogService = new DialogService(_xamlRoot);
+                _databaseService = new DatabaseService(_xamlRoot);
+            }
+            else
+            {
+                Debug.WriteLine("Warning: Window.Content is not FrameworkElement");
+            }
 
-            System.Diagnostics.Debug.WriteLine("Current Date and Time (UTC): 2025-03-05 19:06:34");
-            System.Diagnostics.Debug.WriteLine("Current User's Login: Russell901");
 
             InitializeDatabaseAsync().ConfigureAwait(false);
         }
@@ -102,17 +106,27 @@ namespace Vet_System.ViewModels
         {
             try
             {
-                if (XamlRoot == null)
+                if (_xamlRoot == null)
                 {
-                    await _dialogService.ShowErrorAsync("Error", "Cannot show dialog - XamlRoot not set");
-                    return;
+                    if (_mainWindow?.Content is FrameworkElement element)
+                    {
+                        _xamlRoot = element.XamlRoot;
+                        _dialogService?.UpdateXamlRoot(_xamlRoot);
+                    }
+
+                    if (_xamlRoot == null)
+                    {
+                        Debug.WriteLine("Error: Unable to get XamlRoot from window or page");
+                        await _dialogService.ShowErrorAsync("Error", "Cannot show dialog - XamlRoot not set");
+                        return;
+                    }
                 }
 
                 var addPatientContent = new AddPatientDialog();
 
                 var dialog = new ContentDialog
                 {
-                    XamlRoot = XamlRoot,
+                    XamlRoot = _xamlRoot,
                     Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
                     Title = "Add New Patient",
                     PrimaryButtonText = "Save",
