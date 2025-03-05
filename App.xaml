@@ -6,11 +6,30 @@
     xmlns:local="using:Vet_System">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Default Style for ContentDialog -->
+            <Style x:Key="DefaultContentDialogStyle" TargetType="ContentDialog">
+                <Setter Property="Background" Value="{ThemeResource ContentDialogBackground}"/>
+                <Setter Property="Foreground" Value="{ThemeResource ContentDialogForeground}"/>
+                <Setter Property="BorderBrush" Value="{ThemeResource ContentDialogBorderBrush}"/>
+                <Setter Property="BorderThickness" Value="{ThemeResource ContentDialogBorderWidth}"/>
+                <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}"/>
+                <Setter Property="Padding" Value="{ThemeResource ContentDialogPadding}"/>
+            </Style>
+
+            <!-- Custom Style for ContentDialog -->
+            <Style x:Key="CustomContentDialogStyle" 
+                   BasedOn="{StaticResource DefaultContentDialogStyle}" 
+                   TargetType="ContentDialog">
+                <Setter Property="MaxWidth" Value="600"/>
+                <Setter Property="MinWidth" Value="400"/>
+            </Style>
+            
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
             <!-- Other app resources here -->
+            
         </ResourceDictionary>
     </Application.Resources>
 </Application>

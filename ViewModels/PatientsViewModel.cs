@@ -1,24 +1,37 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.UI;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Vet_System.Components.Dialogs;
 using Vet_System.Models;
+using Vet_System.Services;
 
 namespace Vet_System.ViewModels
 {
     public partial class PatientsViewModel : ObservableObject
     {
-        public XamlRoot XamlRoot { get; set; }
+        private readonly DatabaseService _databaseService;
+        private readonly DialogService _dialogService;
         private readonly Window mainWindow;
         private ContentDialog addPatientDialog;
+
+        public XamlRoot XamlRoot
+        {
+            get => _xamlRoot;
+            set
+            {
+                if (value != null)
+                {
+                    _xamlRoot = value;
+                    _dialogService?.UpdateXamlRoot(value);
+                }
+            }
+        }
+        private XamlRoot _xamlRoot;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(FilteredPets))]
@@ -34,6 +47,9 @@ namespace Vet_System.ViewModels
         {
             get
             {
+                System.Diagnostics.Debug.WriteLine("Current Date and Time (UTC): 2025-03-05 19:06:34");
+                System.Diagnostics.Debug.WriteLine("Current User's Login: Russell901");
+
                 var query = allPets.AsEnumerable();
 
                 if (!string.IsNullOrEmpty(searchTerm))
@@ -55,8 +71,32 @@ namespace Vet_System.ViewModels
         public PatientsViewModel(Window window)
         {
             mainWindow = window;
-            LoadSampleData();
+            var xamlRoot = (window.Content as FrameworkElement)?.XamlRoot;
+
+            _dialogService = new DialogService(xamlRoot);
+            _databaseService = new DatabaseService(xamlRoot);
+
+            System.Diagnostics.Debug.WriteLine("Current Date and Time (UTC): 2025-03-05 19:06:34");
+            System.Diagnostics.Debug.WriteLine("Current User's Login: Russell901");
+
+            InitializeDatabaseAsync().ConfigureAwait(false);
         }
+
+        private async Task InitializeDatabaseAsync()
+        {
+            try
+            {
+                await _databaseService.InitializeAsync();
+                await LoadPetsAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Database initialization failed: {ex.Message}");
+                await _dialogService.ShowErrorAsync("Database Error",
+                    "Failed to initialize database. Please ensure MySQL is running.");
+            }
+        }
+
         [RelayCommand]
         private async Task AddPatientAsync()
         {
@@ -64,147 +104,122 @@ namespace Vet_System.ViewModels
             {
                 if (XamlRoot == null)
                 {
-                    // Log error or show message
-                    System.Diagnostics.Debug.WriteLine("XamlRoot is null");
+                    await _dialogService.ShowErrorAsync("Error", "Cannot show dialog - XamlRoot not set");
                     return;
                 }
 
-                if (addPatientDialog == null)
-                {
-                    addPatientDialog = new ContentDialog
-                    {
-                        XamlRoot = XamlRoot,
-                        Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                        Title = "Add New Patient",
-                        PrimaryButtonText = "Save",
-                        CloseButtonText = "Cancel",
-                        DefaultButton = ContentDialogButton.Primary,
-                        Content = new AddPatientDialog()
-                    };
-                }
+                var addPatientContent = new AddPatientDialog();
 
-                var result = await addPatientDialog.ShowAsync();
+                var dialog = new ContentDialog
+                {
+                    XamlRoot = XamlRoot,
+                    Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                    Title = "Add New Patient",
+                    PrimaryButtonText = "Save",
+                    CloseButtonText = "Cancel",
+                    DefaultButton = ContentDialogButton.Primary,
+                    Content = addPatientContent
+                };
+
+                var result = await dialog.ShowAsync();
+
 
                 if (result == ContentDialogResult.Primary)
                 {
-                    var addPatientContent = addPatientDialog.Content as AddPatientDialog;
                     var viewModel = addPatientContent?.ViewModel;
 
-                    if (viewModel != null)
+                    if (!viewModel.Validate())
                     {
-                        // Create new pet from dialog data
-                        var newPet = new PetItem
-                        {
-                            Name = viewModel.PetName,
-                            Species = viewModel.SelectedSpecies?.ToLowerInvariant() ?? "unknown",
-                            SpeciesBreed = viewModel.Breed,
-                            Age = CalculateAge(viewModel.DateOfBirth),
-                            Owner = new OwnerInfo
-                            {
-                                Name = viewModel.OwnerName,
-                                Phone = viewModel.PhoneNumber
-                            },
-                            NextAppointmentDate = "Not scheduled",
-                            ImageUrl = new Uri("ms-appx:///Assets/Pets/default.jpg")
-                        };
-
-                        allPets.Add(newPet);
-                        OnPropertyChanged(nameof(FilteredPets));
+                        return;
                     }
+
+                    var newPet = new PetItem
+                    {
+                        Name = viewModel.PetName,
+                        Species = viewModel.SelectedSpecies?.ToLowerInvariant() ?? "unknown",
+                        SpeciesBreed = viewModel.Breed,
+                        Age = CalculateAge(viewModel.DateOfBirth),
+                        Owner = new OwnerInfo
+                        {
+                            Name = viewModel.OwnerName,
+                            Phone = viewModel.PhoneNumber,
+                            Email = viewModel.Email,
+                            Address = viewModel.Address
+                        },
+                        NextAppointmentDate = "Not scheduled",
+                        ImageUrl = new Uri("ms-appx:///Assets/Pets/default.jpg")
+                    };
+
+                    await SaveNewPetAsync(newPet);
                 }
+            
             }
             catch (Exception ex)
             {
-                // Log the error
-                System.Diagnostics.Debug.WriteLine($"Error showing dialog: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error in AddPatientAsync: {ex.Message}");
+                await _dialogService.ShowErrorAsync("Error",
+                    "Unable to show the Add Patient dialog. Please try again.");
+    }
+}
 
-                if (XamlRoot != null)
-                {
-                    ContentDialog errorDialog = new ContentDialog
-                    {
-                        Title = "Error",
-                        Content = "Unable to show the Add Patient dialog. Please try again.",
-                        CloseButtonText = "OK",
-                        XamlRoot = XamlRoot
-                    };
+private string CalculateAge(DateTimeOffset? birthDate)
+{
+    if (!birthDate.HasValue)
+        return "Unknown";
 
-                    await errorDialog.ShowAsync();
-                }
-            }
-        }
+    var today = DateTimeOffset.Now;
+    var age = today.Year - birthDate.Value.Year;
 
-        private string CalculateAge(DateTimeOffset? birthDate)
+    if (today.Month < birthDate.Value.Month ||
+        (today.Month == birthDate.Value.Month && today.Day < birthDate.Value.Day))
+    {
+        age--;
+    }
+
+    return age == 1 ? "1 year" : $"{age} years";
+}
+
+private async Task SaveNewPetAsync(PetItem newPet)
+{
+    try
+    {
+        await _databaseService.AddPetAsync(newPet);
+        allPets.Add(newPet);
+        OnPropertyChanged(nameof(FilteredPets));
+    }
+    catch (Exception ex)
+    {
+        System.Diagnostics.Debug.WriteLine($"Error saving new pet: {ex.Message}");
+        await _dialogService.ShowErrorAsync("Error",
+            "Unable to save new pet to database.");
+    }
+}
+
+private async Task LoadPetsAsync()
+{
+    try
+    {
+        var pets = await _databaseService.GetAllPetsAsync();
+        allPets.Clear();
+        foreach (var pet in pets)
         {
-            if (!birthDate.HasValue)
-                return "Unknown";
-
-            var today = DateTimeOffset.Now;
-            var age = today.Year - birthDate.Value.Year;
-
-            if (today.Month < birthDate.Value.Month ||
-                (today.Month == birthDate.Value.Month && today.Day < birthDate.Value.Day))
-            {
-                age--;
-            }
-
-            return age == 1 ? "1 year" : $"{age} years";
+            allPets.Add(pet);
         }
+        OnPropertyChanged(nameof(FilteredPets));
+    }
+    catch (Exception ex)
+    {
+        System.Diagnostics.Debug.WriteLine($"Error loading pets: {ex.Message}");
+        await _dialogService.ShowErrorAsync("Error",
+            "Unable to load pets from database.");
+    }
+}
 
-        private async void ShowError(string title, string message)
-        {
-            if (XamlRoot != null)
-            {
-                ContentDialog dialog = new ContentDialog
-                {
-                    Title = title,
-                    Content = message,
-                    CloseButtonText = "OK",
-                    XamlRoot = XamlRoot
-                };
-
-                await dialog.ShowAsync();
-            }
-        }
-
-        public void OnAddPatientSaved(PetItem newPet)
-        {
-            allPets.Add(newPet);
-            OnPropertyChanged(nameof(FilteredPets));
-            addPatientDialog.Hide();
-        }
-
-        private void LoadSampleData()
-        {
-            allPets.Add(new PetItem
-            {
-                Name = "Max",
-                Age = "3 years",
-                Species = "dog",
-                SpeciesBreed = "Golden Retriever",
-                ImageUrl = new Uri("ms-appx:///Assets/Pets/max.png"),
-                Owner = new OwnerInfo
-                {
-                    Name = "John Smith",
-                    Phone = "(555) 123-4567"
-                },
-                NextAppointmentDate = "Mar 15"
-            });
-
-            // Add more sample data
-            allPets.Add(new PetItem
-            {
-                Name = "Luna",
-                Age = "2 years",
-                Species = "cat",
-                SpeciesBreed = "Siamese",
-                ImageUrl = new Uri("ms-appx:///Assets/Pets/luna.png"),
-                Owner = new OwnerInfo
-                {
-                    Name = "Sarah Johnson",
-                    Phone = "(555) 234-5678"
-                },
-                NextAppointmentDate = "Mar 10"
-            });
-        }
+public void OnAddPatientSaved(PetItem newPet)
+{
+    allPets.Add(newPet);
+    OnPropertyChanged(nameof(FilteredPets));
+    addPatientDialog?.Hide();
+}
     }
 }

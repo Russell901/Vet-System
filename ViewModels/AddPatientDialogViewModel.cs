@@ -51,79 +51,52 @@ namespace Vet_System.ViewModels
             "Other"
         };
 
-        public async Task<bool> ValidateAndSaveAsync()
+
+        public AddPatientDialogViewModel()
         {
-            // Reset validation state
+            System.Diagnostics.Debug.WriteLine("Current Date and Time (UTC): 2025-03-05 19:55:16");
+            System.Diagnostics.Debug.WriteLine("Current User's Login: Russell901");
+
+            // Set default values
+            DateOfBirth = DateTimeOffset.Now;
             HasValidationErrors = false;
             ValidationMessage = string.Empty;
+        }
 
-            // Validate required fields
+        public bool Validate()
+        {
             if (string.IsNullOrWhiteSpace(PetName))
             {
-                HasValidationErrors = true;
                 ValidationMessage = "Pet name is required";
+                HasValidationErrors = true;
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(SelectedSpecies))
             {
-                HasValidationErrors = true;
                 ValidationMessage = "Species is required";
+                HasValidationErrors = true;
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(OwnerName))
             {
-                HasValidationErrors = true;
                 ValidationMessage = "Owner name is required";
+                HasValidationErrors = true;
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(PhoneNumber))
             {
-                HasValidationErrors = true;
                 ValidationMessage = "Phone number is required";
+                HasValidationErrors = true;
                 return false;
             }
 
-            // Create new pet object
-            var newPet = new PetItem
-            {
-                Name = PetName,
-                Species = SelectedSpecies.ToLowerInvariant(),
-                SpeciesBreed = Breed,
-                Age = CalculateAge(DateOfBirth),
-                Owner = new OwnerInfo
-                {
-                    Name = OwnerName,
-                    Phone = PhoneNumber
-                },
-                ImageUrl = new Uri("ms-appx:///Assets/Pets/default.jpg"),
-                NextAppointmentDate = "Not scheduled"
-            };
-
-            // TODO: Add to database or service
-            // For now, we'll just add it to the collection in PatientsViewModel
-            await Task.Delay(500); // Simulate network delay
-
+            HasValidationErrors = false;
+            ValidationMessage = string.Empty;
             return true;
         }
-
-        private string CalculateAge(DateTimeOffset? birthDate)
-        {
-            if (!birthDate.HasValue)
-                return "Unknown";
-
-            var today = DateTimeOffset.Now;
-            var age = today.Year - birthDate.Value.Year;
-
-            if (today.Month < birthDate.Value.Month ||
-                (today.Month == birthDate.Value.Month && today.Day < birthDate.Value.Day))
-            {
-                age--;
-            }
-
-            return age == 1 ? "1 year" : $"{age} years";
-        }
+      
     }
 }

@@ -5,6 +5,7 @@ namespace Vet_System.Models
 {
     public class PetItem
     {
+        public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Age { get; set; } = string.Empty;
         public string Species { get; set; } = string.Empty;

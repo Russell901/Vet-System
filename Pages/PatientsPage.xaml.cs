@@ -12,17 +12,7 @@ namespace Vet_System.Pages
         {
             this.InitializeComponent();
             ViewModel = new PatientsViewModel(App.MainWindow);
-            this.Loaded += PatientsPage_Loaded;
         }
-
-        private void PatientsPage_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (ViewModel != null && this.XamlRoot != null)
-            {
-                ViewModel.XamlRoot = this.XamlRoot;
-            }
-        }
-
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -32,6 +22,20 @@ namespace Vet_System.Pages
             if (ViewModel != null)
             {
                 ViewModel.XamlRoot = this.XamlRoot;
+            }
+            else
+            {
+
+                this.Loaded += Page_Loaded;
+            }
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (this.XamlRoot != null)
+            {
+                ViewModel.XamlRoot = this.XamlRoot;
+                this.Loaded -= Page_Loaded;
             }
         }
     }
