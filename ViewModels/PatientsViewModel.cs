@@ -147,6 +147,8 @@ namespace Vet_System.ViewModels
                         return;
                     }
 
+                    var imagePath = await viewModel.SaveImageAsync();
+
                     var newPet = new PetItem
                     {
                         Name = viewModel.PetName,
@@ -161,7 +163,7 @@ namespace Vet_System.ViewModels
                             Address = viewModel.Address
                         },
                         NextAppointmentDate = "Not scheduled",
-                        ImageUrl = new Uri("ms-appx:///Assets/Pets/default.jpg")
+                        ImageUrl = new Uri(imagePath)
                     };
 
                     await SaveNewPetAsync(newPet);

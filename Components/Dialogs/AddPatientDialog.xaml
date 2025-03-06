@@ -34,6 +34,26 @@
                         SelectedDate="{x:Bind ViewModel.DateOfBirth, Mode=TwoWay}"
                         YearVisible="True"/>
 
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Image x:Name="PetImage" 
+                       Width="100" 
+                       Height="100"
+                       Source="{x:Bind ViewModel.SelectedImageUri, Mode=OneWay, Converter={StaticResource UriToImageSourceConverter}}"
+                       Stretch="UniformToFill">
+                    <Image.Clip>
+                        <RectangleGeometry Rect="0,0,100,100" />
+                    </Image.Clip>
+                </Image>
+                <StackPanel Spacing="4">
+                    <Button Content="Select Image" Click="{x:Bind ViewModel.SelectImageAsync}"/>
+                    <TextBlock Text="Recommended: Square image, max 2MB" 
+                  Style="{ThemeResource CaptionTextBlockStyle}" 
+                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{x:Bind ViewModel.SelectedImageName, Mode=OneWay}"
+                  Style="{ThemeResource CaptionTextBlockStyle}"/>
+                </StackPanel>
+            </StackPanel>
+
             <!-- Owner Information Section -->
             <TextBlock Text="Owner Information" 
                      Style="{ThemeResource BodyStrongTextBlockStyle}"
