@@ -1,31 +1,55 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using System;
+using System.Numerics;
+using Vet_System.ViewModels;
 
 namespace Vet_System.Pages
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class AppointmentsPage : Page
     {
+        public AppointmentsViewModel ViewModel { get; } = new AppointmentsViewModel();
+
         public AppointmentsPage()
         {
+            ViewModel = new AppointmentsViewModel();
             this.InitializeComponent();
+            Loaded += async (s, e) => await ViewModel.LoadAppointmentsAsync();
+        }
+
+        private void OnSearchTextChanged(AutoSuggestBox sender,
+                                   AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                ViewModel.SearchTerm = sender.Text;
+            }
+        }
+
+        private void OnListViewLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is ListView listView)
+            {
+                listView.ContainerContentChanging += static (s, args) =>
+                {
+                    if (args.Phase == 0)
+                    {
+                        args.ItemContainer.Opacity = 0;
+                        args.ItemContainer.Translation = new Vector3(0, 20, 0);
+                    }
+                    if (args.Phase == 1)
+                    {
+                        var compositor = Microsoft.UI.Xaml.Media.CompositionTarget.GetCompositorForCurrentThread();
+                        var animation = compositor.CreateVector3KeyFrameAnimation();
+                        animation.InsertKeyFrame(1, new Vector3(0, 0, 0));
+                        animation.Duration = TimeSpan.FromMilliseconds(200);
+                        animation.DelayTime = TimeSpan.FromMilliseconds(args.ItemIndex * 50);
+
+                        args.ItemContainer.StartAnimation(animation);
+                        args.ItemContainer.Opacity = 1;
+                    }
+                };
+            }
         }
     }
 }

@@ -14,8 +14,14 @@ namespace Vet_System.Services
         private readonly XamlRoot _xamlRoot;
         private readonly DatabaseInitializer _initializer;
         private readonly DialogService _dialogService;
+        private AppointmentService _appointmentService;
 
-        private static readonly string DefaultConnectionString =
+        public IAppointmentService AppointmentService =>
+            _appointmentService ??= new AppointmentService(_connectionString, _dialogService);
+
+
+
+        public static readonly string DefaultConnectionString =
             "Server=localhost;" +
             "Database=vet_system;" +
             "Uid=root;";

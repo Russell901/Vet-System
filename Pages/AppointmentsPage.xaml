@@ -6,10 +6,142 @@
     xmlns:local="using:Vet_System.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vc="using:Vet_System.Converters"
+    xmlns:vm="using:Vet_System.ViewModels"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid>
+    <Page.Resources>
+        <vc:StatusToColorConverter x:Key="StatusColorConverter"/>
+        <Style TargetType="ListView" x:Key="AppointmentsListViewStyle">
+            <Setter Property="SelectionMode" Value="None"/>
+            <Setter Property="IsItemClickEnabled" Value="False"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid Margin="24" x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
         <TextBlock Text="Appointments Page" Style="{StaticResource TitleTextBlockStyle}"/>
+
+        <StackPanel Grid.Row="1" Spacing="16" Margin="0,24,0,24"
+                    Orientation="Horizontal">
+            <AutoSuggestBox Width="300" 
+                            PlaceholderText="Search appointments..."
+                            QueryIcon="Find"
+                            Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay}"
+                            TextChanged="OnSearchTextChanged"/>
+
+            <ComboBox Header="Status" 
+                      SelectedValue="{x:Bind ViewModel.FilterStatus, Mode=TwoWay}"
+                      ItemsSource="{x:Bind ViewModel.StatusFilters}"
+                      DisplayMemberPath="DisplayName"
+                      SelectedValuePath="Value"
+                      Width="200"/>
+
+            <HyperlinkButton Content="View Calendar"
+                             Command="{x:Bind ViewModel.ViewCalendarCommand}">
+                
+                   
+                
+            </HyperlinkButton>
+
+            <Button Content="New Appointment" 
+                    Command="{x:Bind ViewModel.NewAppointmentCommand}">
+            </Button>
+        </StackPanel>
+
+        <!-- Appointments List -->
+        <ListView Grid.Row="2" 
+                 ItemsSource="{x:Bind ViewModel.FilteredAppointments, Mode=OneWay}"
+                 Style="{StaticResource AppointmentsListViewStyle}"
+                 VirtualizingStackPanel.VirtualizationMode="Recycling"
+                 Loaded="OnListViewLoaded">
+            <ListView.Header>
+                <Grid Background="{ThemeResource SystemControlBackgroundAltHighBrush}"
+                      Padding="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Pet" Style="{StaticResource CaptionTextBlockStyle}"/>
+                    <TextBlock Text="Owner" Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}"/>
+                    <TextBlock Text="Date &amp; Time" Grid.Column="2" Style="{StaticResource CaptionTextBlockStyle}"/>
+                    <TextBlock Text="Reason" Grid.Column="3" Style="{StaticResource CaptionTextBlockStyle}"/>
+                    <TextBlock Text="Status" Grid.Column="4" Style="{StaticResource CaptionTextBlockStyle}"/>
+                    <TextBlock Text="Actions" Grid.Column="5" Style="{StaticResource CaptionTextBlockStyle}"/>
+                </Grid>
+            </ListView.Header>
+
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="vm:AppointmentItemViewModel">
+                    <Grid Padding="12" 
+                          Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Pet Name -->
+                        <TextBlock Text="{x:Bind PetName}" 
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"/>
+
+                        <!-- Owner -->
+                        <TextBlock Grid.Column="1" 
+                                   Text="{x:Bind OwnerName}" 
+                                   Style="{StaticResource BodyTextBlockStyle}"/>
+
+                        <!-- Date/Time -->
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="{x:Bind Date}" 
+                                       Style="{StaticResource BodyTextBlockStyle}"/>
+                            <TextBlock Text="{x:Bind Time}" 
+                                       Style="{StaticResource CaptionTextBlockStyle}"/>
+                        </StackPanel>
+
+                        <!-- Reason -->
+                        <TextBlock Grid.Column="3" 
+                                   Text="{x:Bind Reason}" 
+                                   Style="{StaticResource BodyTextBlockStyle}"
+                                   TextWrapping="WrapWholeWords"/>
+
+                        <!-- Status -->
+                        <Border Grid.Column="4" 
+                                Background="{x:Bind Status, Converter={StaticResource StatusColorConverter}, ConverterParameter=background}"
+                                CornerRadius="4"
+                                HorizontalAlignment="Left">
+                            <TextBlock Text="{x:Bind Status}"
+                                       Foreground="{x:Bind Status, Converter={StaticResource StatusColorConverter}, ConverterParameter=foreground}"
+                                       Margin="8,4"
+                                       Style="{StaticResource CaptionTextBlockStyle}"/>
+                        </Border>
+
+                        <!-- Actions -->
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="8">
+                            <Button Command="{x:Bind EditCommand}"
+                                    ToolTipService.ToolTip="Edit">
+                                <SymbolIcon Symbol="Edit"/>
+                            </Button>
+                            <Button Command="{x:Bind CancelCommand}"
+                                    ToolTipService.ToolTip="Cancel">
+                                <SymbolIcon Symbol="Cancel"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
     </Grid>
 </Page>

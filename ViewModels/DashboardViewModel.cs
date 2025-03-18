@@ -48,12 +48,14 @@ namespace Vet_System.ViewModels
 
         private void InitializeAppointments()
         {
-            Appointments.Add(new AppointmentItem
-            {
-                PatientName = "Max Smith",
-                Description = "Annual Checkup",
-                Time = "14:30"
-            });
+            Appointments.Add(new AppointmentItem(
+                id: "1",
+               petName: "Max",
+               ownerName: "Harry Potter",
+               dateTime: DateTime.Now.Date.AddHours(14).AddMinutes(30),
+               reason: "Annual Checkup",
+               status: "scheduled"
+            ));
 
             // Add more appointments
         }
@@ -76,7 +78,7 @@ namespace Vet_System.ViewModels
                 var dialog = new ContentDialog
                 {
                     Title = "Appointment Details",
-                    Content = $"Patient: {appointment.PatientName}\nDescription: {appointment.Description}\nTime: {appointment.Time}",
+                    Content = $"Patient: {appointment.PetName}\nDescription: {appointment.Reason}\nTime: {appointment.DateTime}",
                     CloseButtonText = "OK"
                 };
 

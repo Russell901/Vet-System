@@ -24,8 +24,6 @@ namespace Vet_System.Services
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("Current Date and Time (UTC): 2025-03-05 18:47:12");
-                System.Diagnostics.Debug.WriteLine("Current User's Login: Russell901");
 
                 await EnsureDatabaseExistsAsync();
                 await CreateTablesAsync();
@@ -97,12 +95,23 @@ namespace Vet_System.Services
                     FOREIGN KEY (OwnerId) REFERENCES Owners(Id)
                 );";
 
-            // Execute creation commands
+            //Create Appomit,ents
+            var createAppointents = @"
+                CREATE TABLE IF NOT EXISTS Appointments (
+                    Id VARCHAR(36) PRIMARY KEY,
+                    PetId INT NOT NULL,
+                    DateTime DATETIME NOT NULL,
+                    Reason VARCHAR(255) NOT NULL,
+                    Status VARCHAR(20) NOT NULL DEFAULT 'scheduled',
+                    FOREIGN KEY (PetId) REFERENCES Pets(Id) ON DELETE CASCADE
+                );";
+
             await ExecuteCommandAsync(connection, createOwnersTable);
             await ExecuteCommandAsync(connection, createPetsTable);
+            await ExecuteCommandAsync(connection, createAppointents);
 
-            // Insert sample data if needed
-            await InsertSampleDataIfNeededAsync(connection);
+            // Insert sample data 
+            await InsertSampleDataAsync(connection);
         }
 
         private async Task ExecuteCommandAsync(MySqlConnection connection, string commandText)
@@ -111,7 +120,7 @@ namespace Vet_System.Services
             await command.ExecuteNonQueryAsync();
         }
 
-        private async Task InsertSampleDataIfNeededAsync(MySqlConnection connection)
+        private async Task InsertSampleDataAsync(MySqlConnection connection)
         {
             var checkCommand = new MySqlCommand("SELECT COUNT(*) FROM Owners", connection);
             var count = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());

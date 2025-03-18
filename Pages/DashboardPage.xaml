@@ -109,18 +109,18 @@
 
                                         <PersonPicture Width="40" 
                                                      Height="40"
-                                                     DisplayName="{x:Bind PatientName}"/>
+                                                     DisplayName="{x:Bind PetName}"/>
 
                                         <StackPanel Grid.Column="1">
-                                            <TextBlock Text="{x:Bind PatientName}"
+                                            <TextBlock Text="{x:Bind PetName}"
                                                      Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                            <TextBlock Text="{x:Bind Description}"
+                                            <TextBlock Text="{x:Bind Reason}"
                                                      Style="{StaticResource CaptionTextBlockStyle}"
                                                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                         </StackPanel>
 
                                         <TextBlock Grid.Column="2"
-                                                 Text="{x:Bind Time}"
+                                                 Text="{x:Bind DateTime}"
                                                  Style="{StaticResource CaptionTextBlockStyle}"
                                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                     </Grid>

@@ -13,6 +13,7 @@ namespace Vet_System.Models
         public Uri ImageUrl { get; set; } = null!;
         public OwnerInfo Owner { get; set; } = null!;
         public string NextAppointmentDate { get; set; } = string.Empty;
+        public string Notes { get; set; } = string.Empty;
         public ICommand ViewDetailsCommand { get; set; } = null!;
     }
 }

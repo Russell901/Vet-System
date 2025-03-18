@@ -83,8 +83,6 @@ namespace Vet_System.ViewModels
             SelectedNavItem = NavItems[0];
             CurrentPageTitle = SelectedNavItem.Label;
 
-            // Update the current date time
-            CurrentDateTime = "2025-03-03 11:06:47"; // Using the specific time you provided
         }
 
         private void InitializeUserInfo()
@@ -110,8 +108,16 @@ namespace Vet_System.ViewModels
 
         private void UpdateDateTime()
         {
-            CurrentDateTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss 'UTC'");
+            try
+            {
+                CurrentDateTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss 'UTC'");
+            }
+            catch (Exception)
+            {
+                // Log or handle the exception
+            }
         }
+
 
         private void NavigateToPage(NavItem navItem)
         {
