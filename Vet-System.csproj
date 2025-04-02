@@ -61,7 +61,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Components\Dialogs\" />
     <Folder Include="Views\" />
   </ItemGroup>
   <ItemGroup>
@@ -107,6 +106,9 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Components\Dialogs\AppointmentFormDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <!--

@@ -135,13 +135,13 @@
                                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                                 CornerRadius="12"
                                                 Padding="8,4">
-                                            <TextBlock Text="{x:Bind Age}"
+                                            <TextBlock Text="{x:Bind DateOfBirth}"
                                                      Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
                                                      Style="{StaticResource CaptionTextBlockStyle}"/>
                                         </Border>
                                     </Grid>
 
-                                    <TextBlock Text="{x:Bind SpeciesBreed}"
+                                    <TextBlock Text="{x:Bind Breed}"
                                              Style="{StaticResource BodyTextBlockStyle}"
                                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
 
@@ -149,28 +149,25 @@
 
                                     <TextBlock Text="Owner"
                                              Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                    <TextBlock Text="{x:Bind Owner.Name}"
+                                    <TextBlock Text="{x:Bind Owner}"
                                              Style="{StaticResource BodyTextBlockStyle}"
                                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <TextBlock Text="{x:Bind Owner.Phone}"
-                                             Style="{StaticResource BodyTextBlockStyle}"
-                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-
+                                   
                                     <Grid Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <HyperlinkButton Content="View Details"
-                                                       Command="{x:Bind ViewDetailsCommand}"/>
+                                        <!--<HyperlinkButton Content="View Details"
+                                                       Command="{x:Bind ViewDetailsCommand}"/>-->
 
-                                        <TextBlock Grid.Column="1"
+                                        <!--<TextBlock Grid.Column="1"
                                                  Text="{x:Bind NextAppointmentDate}"
                                                  Style="{StaticResource CaptionTextBlockStyle}"
                                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                  HorizontalAlignment="Right"
-                                                 VerticalAlignment="Center"/>
+                                                 VerticalAlignment="Center"/>-->
                                     </Grid>
                                 </StackPanel>
                             </Grid>

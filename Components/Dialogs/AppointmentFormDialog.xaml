@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Vet_System.Components.Dialogs.AppointmentFormDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Vet_System.Components.Dialogs"
+    xmlns:vm="using:Vet_System.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+     d:DesignHeight="300"
+    d:DesignWidth="800">
+    
+    <UserControl.DataContext>
+        <vm:AppointmentFormViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" 
+                   Style="{StaticResource SubtitleTextBlockStyle}" 
+                   Margin="0,0,0,16"/>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16">
+                <!-- Pet Selection -->
+                <Grid>
+                    <ComboBox Header="Pet" 
+                              Width="300" 
+                              HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Pets}"
+                              DisplayMemberPath="Name"
+                              SelectedItem="{x:Bind ViewModel.SelectedPet, Mode=TwoWay}"
+                              PlaceholderText="Select a pet" />
+
+                    <ProgressRing IsActive="{x:Bind ViewModel.IsLoadingPets, Mode=OneWay}" 
+                                  Width="20" Height="20" 
+                                  HorizontalAlignment="Right" 
+                                  VerticalAlignment="Center"
+                                  Margin="0,0,8,0"/>
+                </Grid>
+
+                <!-- Owner will be auto-selected based on pet -->
+                <TextBox Header="Owner" 
+                         IsReadOnly="True"
+                         Text="{x:Bind ViewModel.OwnerName, Mode=OneWay}"/>
+
+                <!-- Date Picker -->
+                <DatePicker Header="Date"
+                            Date="{x:Bind ViewModel.AppointmentDate, Mode=TwoWay}"
+                            HorizontalAlignment="Stretch"/>
+
+                <!-- Time Picker -->
+                <TimePicker Header="Time"
+                            Time="{x:Bind ViewModel.AppointmentTime, Mode=TwoWay}"
+                            MinuteIncrement="15"
+                            ClockIdentifier="12HourClock"
+                            HorizontalAlignment="Stretch"/>
+
+                <!-- Appointment Type -->
+                <ComboBox Header="Appointment Type" 
+                          ItemsSource="{x:Bind ViewModel.AppointmentTypes}"
+                          SelectedItem="{x:Bind ViewModel.SelectedAppointmentType, Mode=TwoWay}"
+                          HorizontalAlignment="Stretch"
+                          PlaceholderText="Select appointment type">
+                </ComboBox>
+
+                <!-- Reason -->
+                <TextBox Header="Reason for Visit"
+                         Text="{x:Bind ViewModel.Reason, Mode=TwoWay}"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         Height="100"/>
+
+                <!-- Status -->
+                <ComboBox Header="Status" 
+                          ItemsSource="{x:Bind ViewModel.StatusOptions}"
+                          SelectedItem="{x:Bind ViewModel.Status, Mode=TwoWay}"
+                          HorizontalAlignment="Stretch">
+                </ComboBox>
+
+                <!-- Validation Error Summary -->
+                <InfoBar IsOpen="{x:Bind ViewModel.HasValidationErrors, Mode=OneWay}"
+                         IsClosable="False"
+                         Severity="Error"
+                         Title="Please fix the following errors:">
+                    <InfoBar.Content>
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.ValidationErrors, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <TextBlock Text="{x:Bind}" Foreground="Red"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </InfoBar.Content>
+                </InfoBar>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Data;
 using Vet_System.Models;
+using Org.BouncyCastle.Asn1.X9;
 
 namespace Vet_System.Services
 {
@@ -25,6 +26,7 @@ namespace Vet_System.Services
             "Server=localhost;" +
             "Database=vet_system;" +
             "Uid=root;";
+        private readonly OwnerInfo? ownerInfo;
 
         public DatabaseService(XamlRoot xamlRoot)
         {
@@ -77,23 +79,16 @@ namespace Vet_System.Services
 
                 while (await reader.ReadAsync())
                 {
-                    pets.Add(new PetItem
-                    {
-                        Id = reader.GetInt32("Id"),
-                        Name = reader.GetString("Name"),
-                        Species = reader.GetString("Species"),
-                        SpeciesBreed = reader.GetString("Breed"),
-                        Age = CalculateAge(reader.GetDateTime("DateOfBirth")),
-                        Owner = new OwnerInfo
-                        {
-                            Name = reader.GetString("OwnerName"),
-                            Phone = reader.GetString("OwnerPhone")
-                        },
-                        NextAppointmentDate = reader.IsDBNull(reader.GetOrdinal("NextAppointment"))
-                            ? "Not scheduled"
-                            : reader.GetDateTime("NextAppointment").ToString("MMM dd"),
-                        ImageUrl = new Uri(reader.GetString("ImageUrl"))
-                    });
+                    pets.Add(new PetItem(
+                         reader.GetInt32("Id").ToString(),  
+                         reader.GetString("Name"),          
+                         reader.GetString("Species"),      
+                         reader.GetString("Breed"),        
+                         reader.GetDateTime("DateOfBirth"), 
+                         reader.GetInt32("OwnerId").ToString(), 
+                         reader.GetString("OwnerName"),     
+                         reader.GetString("ImageUrl")    
+                     ));
                 }
             }
             catch (Exception ex)
@@ -114,8 +109,9 @@ namespace Vet_System.Services
 
             try
             {
-                // First, add or update the owner
-                var ownerId = await AddOrUpdateOwnerAsync(connection, transaction, pet.Owner);
+                var owner = ownerInfo ?? new OwnerInfo { Name = pet.Owner };
+
+                var ownerId = await AddOrUpdateOwnerAsync(connection, transaction, owner);
 
                 // Then add the pet
                 var addPetQuery = @"
@@ -130,7 +126,7 @@ namespace Vet_System.Services
                 using var command = new MySqlCommand(addPetQuery, connection, transaction as MySqlTransaction);
                 command.Parameters.AddWithValue("@name", pet.Name);
                 command.Parameters.AddWithValue("@species", pet.Species);
-                command.Parameters.AddWithValue("@breed", pet.SpeciesBreed);
+                command.Parameters.AddWithValue("@breed", pet.Breed);
                 command.Parameters.AddWithValue("@dateOfBirth", DateTime.Now.AddYears(-1)); // Default to 1 year old
                 command.Parameters.AddWithValue("@ownerId", ownerId);
                 command.Parameters.AddWithValue("@imageUrl", pet.ImageUrl.ToString());

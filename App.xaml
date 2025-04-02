@@ -8,6 +8,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <converters:UriToImageSourceConverter x:Key="UriToImageSourceConverter"/>
+            <converters:BooleanNegationConverter x:Key="BooleanNegationConverter"/>
+
             <!-- Default Style for ContentDialog -->
             <Style x:Key="DefaultContentDialogStyle" TargetType="ContentDialog">
                 <Setter Property="Background" Value="{ThemeResource ContentDialogBackground}"/>

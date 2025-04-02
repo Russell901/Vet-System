@@ -301,12 +301,43 @@ namespace Vet_System.Services
 
         private async Task<int> GetPetIdByNameAsync(MySqlConnection connection, string petName)
         {
-            var query = "SELECT Id FROM Pets WHERE Name = @petName LIMIT 1;";
-            using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@petName", petName);
+            try
+            {
+                var query = "SELECT Id FROM Pets WHERE Name = @petName LIMIT 1;";
+                using var command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@petName", petName);
 
-            var result = await command.ExecuteScalarAsync();
-            return result != null ? Convert.ToInt32(result) : 0;
+                var result = await command.ExecuteScalarAsync();
+
+                if (result != null)
+                    return Convert.ToInt32(result);
+
+                // If exact match not found, try case-insensitive match
+                query = "SELECT Id FROM Pets WHERE LOWER(Name) = LOWER(@petName) LIMIT 1;";
+                using var command2 = new MySqlCommand(query, connection);
+                command2.Parameters.AddWithValue("@petName", petName);
+
+                result = await command2.ExecuteScalarAsync();
+
+                if (result != null)
+                    return Convert.ToInt32(result);
+
+                // If still not found, log which pets are available
+                using var cmdListPets = new MySqlCommand("SELECT Id, Name FROM Pets", connection);
+                using var reader = await cmdListPets.ExecuteReaderAsync();
+                System.Diagnostics.Debug.WriteLine("Available pets in database:");
+                while (await reader.ReadAsync())
+                {
+                    System.Diagnostics.Debug.WriteLine($"- Pet ID: {reader["Id"]}, Name: {reader["Name"]}");
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetPetIdByNameAsync: {ex.Message}");
+                throw;
+            }
         }
 
         private async Task UpdatePetNextAppointmentAsync(MySqlConnection connection, int petId, DateTime? specificDate = null)

@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Org.BouncyCastle.Asn1.X9;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -54,7 +55,7 @@ namespace Vet_System.ViewModels
                 {
                     query = query.Where(pet =>
                         pet.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        pet.SpeciesBreed.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                        pet.Breed.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
                 }
 
                 if (filterSpecies != "all")
@@ -148,31 +149,36 @@ namespace Vet_System.ViewModels
                     }
 
                     var imagePath = await viewModel.SaveImageAsync();
+                    var birthDate = viewModel.DateOfBirth.HasValue ? viewModel.DateOfBirth.Value.DateTime : DateTime.Now;
 
-                    var newPet = new PetItem
+
+                    var newPet = new PetItem(
+                        id: Guid.NewGuid().ToString(),  
+                        name: viewModel.PetName,
+                        species: viewModel.SelectedSpecies?.ToLowerInvariant() ?? "unknown",
+                        breed: viewModel.Breed,
+                        dateOfBirth: birthDate,
+                        ownerId: string.Empty, 
+                        owner: viewModel.OwnerName,  
+                        imageUrl: imagePath
+                    );
+
+                    var ownerInfo = new OwnerInfo
                     {
-                        Name = viewModel.PetName,
-                        Species = viewModel.SelectedSpecies?.ToLowerInvariant() ?? "unknown",
-                        SpeciesBreed = viewModel.Breed,
-                        Age = CalculateAge(viewModel.DateOfBirth),
-                        Owner = new OwnerInfo
-                        {
-                            Name = viewModel.OwnerName,
-                            Phone = viewModel.PhoneNumber,
-                            Email = viewModel.Email,
-                            Address = viewModel.Address
-                        },
-                        NextAppointmentDate = "Not scheduled",
-                        ImageUrl = new Uri(imagePath)
+                        Name = viewModel.OwnerName,
+                        Phone = viewModel.PhoneNumber,
+                        Email = viewModel.Email,
+                        Address = viewModel.Address
                     };
 
-                    await SaveNewPetAsync(newPet);
+
+                    await _databaseService.AddPetAsync(newPet);
                 }
             
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error in AddPatientAsync: {ex.Message}");
+                Debug.WriteLine($"Error in AddPatientAsync: {ex.Message}");
                 await _dialogService.ShowErrorAsync("Error",
                     "Unable to show the Add Patient dialog. Please try again.");
     }
@@ -205,7 +211,7 @@ private async Task SaveNewPetAsync(PetItem newPet)
     }
     catch (Exception ex)
     {
-        System.Diagnostics.Debug.WriteLine($"Error saving new pet: {ex.Message}");
+        Debug.WriteLine($"Error saving new pet: {ex.Message}");
         await _dialogService.ShowErrorAsync("Error",
             "Unable to save new pet to database.");
     }
@@ -225,7 +231,7 @@ private async Task LoadPetsAsync()
     }
     catch (Exception ex)
     {
-        System.Diagnostics.Debug.WriteLine($"Error loading pets: {ex.Message}");
+        Debug.WriteLine($"Error loading pets: {ex.Message}");
         await _dialogService.ShowErrorAsync("Error",
             "Unable to load pets from database.");
     }
