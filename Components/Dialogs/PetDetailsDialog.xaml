@@ -9,6 +9,10 @@
     xmlns:converters="using:Vet_System.Converters"
     mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <converters:NotVisibilityConverter x:Key="NotVisibilityConverter"/>
+    </UserControl.Resources>
+
     <Grid MinWidth="600" MaxWidth="800">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -146,11 +150,11 @@
                         <!-- Pet Notes -->
                         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Spacing="8" Margin="0,0,0,8">
                             <TextBlock Text="Notes" Style="{ThemeResource SubtitleTextBlockStyle}"/>
-                            <TextBlock Text="{x:Bind ViewModel.Notes, Mode=OneWay}" 
-                                       TextWrapping="Wrap" 
+                            <TextBlock Text="{x:Bind ViewModel.Notes, Mode=OneWay}"
+                                       TextWrapping="Wrap"
                                        Style="{ThemeResource BodyTextBlockStyle}"
                                        Visibility="{x:Bind ViewModel.HasNotes, Mode=OneWay}"/>
-                            <TextBlock Text="No notes available." 
+                            <TextBlock Text="No notes available."
                                        Style="{ThemeResource BodyTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                        Visibility="{x:Bind ViewModel.HasNotes, Mode=OneWay, Converter={StaticResource NotVisibilityConverter}}"/>

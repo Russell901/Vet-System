@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Data;
 using Vet_System.Models;
+using System.Diagnostics;
 
 namespace Vet_System.Services
 {
@@ -171,6 +172,41 @@ namespace Vet_System.Services
 
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result);
+        }
+
+        public async Task<OwnerInfo> GetOwnerByIdAsync(string ownerId)
+        {
+            try
+            {
+                using var connection = new MySqlConnection(DefaultConnectionString);
+                await connection.OpenAsync();
+
+                string sql = @"
+                    SELECT name, email, phone, address
+                    FROM owners
+                    WHERE id = @ownerId";
+
+                using var command = new MySqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@ownerId", ownerId);
+                using var reader = await command.ExecuteReaderAsync();
+
+                if (await reader.ReadAsync())
+                {
+                    return new OwnerInfo
+                    {
+                        Name = reader.GetString("name"),
+                        Email = reader.GetString("email"),
+                        Phone = reader.GetString("phone"),
+                        Address = reader.GetString("address")
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error getting owner by ID: {ex.Message}");
+            }
+
+            return null;
         }
     }
 }

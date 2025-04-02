@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="Vet_System.Pages.PatientsPage"
+    x:Name="patientsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Vet_System.Pages"
@@ -161,8 +162,8 @@
                                         </Grid.ColumnDefinitions>
 
                                         <HyperlinkButton Content="View Details"
-                                                       Command="{Binding DataContext.ViewDetailsCommand, ElementName=ContentArea}"
-                                                       CommandParameter="{x:Bind Id}"/>
+                                                         Command="{Binding ElementName=patientsPage, Path=ViewModel.ViewDetailsCommand}"
+                                                         CommandParameter="{x:Bind Id}"/>
 
                                         <TextBlock Grid.Column="1"
                                                  Text="{x:Bind NextAppointmentDate, TargetNullValue='No upcoming appointments'}"

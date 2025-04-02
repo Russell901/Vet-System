@@ -51,6 +51,7 @@ namespace Vet_System.ViewModels
         {
             _databaseService = new DatabaseService(xamlRoot);
             _petService = new PetService(DatabaseService.DefaultConnectionString);
+            _appointmentService = new AppointmentService(DatabaseService.DefaultConnectionString);
 
             // Initialize the pet
             LoadPetDetailsAsync(petId).ConfigureAwait(false);
@@ -70,18 +71,18 @@ namespace Vet_System.ViewModels
                     // Calculate age
                     Age = CalculateAge(Pet.DateOfBirth);
 
-                    //// Load owner details
-                    //Owner = await _databaseService.GetOwnerByIdAsync(Pet.OwnerId);
-                    //if (Owner == null)
-                    //{
-                    //    Owner = new OwnerInfo
-                    //    {
-                    //        Name = Pet.Owner,
-                    //        Phone = "Not available",
-                    //        Email = "Not available",
-                    //        Address = "Not available"
-                    //    };
-                    //}
+                    // load owner details
+                    Owner = await _databaseService.GetOwnerByIdAsync(Pet.OwnerId);
+                    if (Owner == null)
+                    {
+                        Owner = new OwnerInfo
+                        {
+                            Name = Pet.Owner,
+                            Phone = "Not available",
+                            Email = "Not available",
+                            Address = "Not available"
+                        };
+                    }
 
                     // Load appointments
                     await LoadAppointmentsAsync(petId);
