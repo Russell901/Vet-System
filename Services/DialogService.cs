@@ -45,6 +45,23 @@ namespace Vet_System.Services
             return result == ContentDialogResult.Primary;
         }
 
+        public async Task ShowSuccessAsync(string title, string message)
+        {
+            ContentDialog dialog = new ContentDialog
+            {
+                XamlRoot = _xamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = title,
+                Content = message,
+                CloseButtonText = "OK",
+                DefaultButton = ContentDialogButton.Close
+            };
+
+            // You can optionally style this dialog with a success icon or green accent
+
+            await dialog.ShowAsync();
+        }
+
         public async Task ShowErrorAsync(string title, string content)
         {
             if (_xamlRoot == null)

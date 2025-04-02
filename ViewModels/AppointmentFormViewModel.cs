@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -148,22 +150,22 @@ namespace Vet_System.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
 
-        // Add a parameterless constructor for XAML
         public AppointmentFormViewModel() : this(null)
         {
         }
-
+        private XamlRoot _xamlRoot;
         public AppointmentFormViewModel(
             AppointmentItem? appointment = null,
             IAppointmentService? appointmentService = null,
-            IPetService? petService = null)
+            IPetService? petService = null,
+            XamlRoot? xamlRoot = null)
         {
             _appointmentService = appointmentService ?? new AppointmentService(DatabaseService.DefaultConnectionString);
             _petService = petService ?? new PetService(DatabaseService.DefaultConnectionString);
             _taskCompletionSource = new TaskCompletionSource<AppointmentItem?>();
             _isNewAppointment = appointment == null;
+            _xamlRoot = xamlRoot;
 
-            // Initialize with default values or existing appointment
             _appointment = appointment ?? new AppointmentItem(
                 string.Empty,
                 string.Empty,
@@ -215,7 +217,6 @@ namespace Vet_System.ViewModels
                     Pets.Add(pet);
                 }
 
-                // If editing, try to select the current pet
                 if (!string.IsNullOrEmpty(_appointment.PetName) && !_isNewAppointment)
                 {
                     SelectedPet = Pets.FirstOrDefault(p => p.Name == _appointment.PetName);
@@ -274,10 +275,8 @@ namespace Vet_System.ViewModels
 
             try
             {
-                // Create the appointment item
                 var appointmentDateTime = AppointmentDate.Date.Add(AppointmentTime);
 
-                // For a new appointment
                 if (IsNewAppointment)
                 {
                     var appointmentItem = new AppointmentItem(
@@ -291,15 +290,11 @@ namespace Vet_System.ViewModels
 
                     System.Diagnostics.Debug.WriteLine($"Creating appointment for pet: {SelectedPet.Name} (ID: {SelectedPet.Id})");
 
-                    // Create in database
                     var createdAppointment = await _appointmentService.CreateAppointmentAsync(appointmentItem);
-
-                    // Return the created appointment with its assigned ID
                     _taskCompletionSource.SetResult(createdAppointment);
                 }
                 else
                 {
-                    // Update existing appointment
                     _appointment.PetName = SelectedPet.Name;
                     _appointment.OwnerName = OwnerName;
                     _appointment.DateTime = appointmentDateTime;
@@ -314,7 +309,7 @@ namespace Vet_System.ViewModels
             {
                 ValidationErrors.Add($"Error saving appointment: {ex.Message}");
                 HasValidationErrors = true;
-                throw; // Re-throw to allow proper error handling by caller
+                throw;
             }
         }
 
@@ -324,5 +319,20 @@ namespace Vet_System.ViewModels
         }
 
         public Task<AppointmentItem?> GetResultAsync() => _taskCompletionSource.Task;
+
+        private async Task ShowErrorDialog(string title, string message)
+        {
+            if (_xamlRoot == null)
+                return;
+
+            var dialog = new ContentDialog
+            {
+                XamlRoot = _xamlRoot,
+                Title = title,
+                Content = message,
+                CloseButtonText = "OK"
+            };
+            await dialog.ShowAsync();
+        }
     }
 }

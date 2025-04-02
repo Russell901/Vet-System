@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Org.BouncyCastle.Asn1.X9;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -138,7 +137,6 @@ namespace Vet_System.ViewModels
 
                 var result = await dialog.ShowAsync();
 
-
                 if (result == ContentDialogResult.Primary)
                 {
                     var viewModel = addPatientContent?.ViewModel;
@@ -151,15 +149,14 @@ namespace Vet_System.ViewModels
                     var imagePath = await viewModel.SaveImageAsync();
                     var birthDate = viewModel.DateOfBirth.HasValue ? viewModel.DateOfBirth.Value.DateTime : DateTime.Now;
 
-
                     var newPet = new PetItem(
-                        id: Guid.NewGuid().ToString(),  
+                        id: Guid.NewGuid().ToString(),
                         name: viewModel.PetName,
                         species: viewModel.SelectedSpecies?.ToLowerInvariant() ?? "unknown",
                         breed: viewModel.Breed,
                         dateOfBirth: birthDate,
-                        ownerId: string.Empty, 
-                        owner: viewModel.OwnerName,  
+                        ownerId: string.Empty,
+                        owner: viewModel.OwnerName,
                         imageUrl: imagePath
                     );
 
@@ -171,77 +168,83 @@ namespace Vet_System.ViewModels
                         Address = viewModel.Address
                     };
 
-
                     await _databaseService.AddPetAsync(newPet);
+
+                    // Add the new pet to the collection and update UI
+                    allPets.Add(newPet);
+                    OnPropertyChanged(nameof(FilteredPets));
+
+                    // Show success confirmation
+                    await _dialogService.ShowSuccessAsync("Patient Added",
+                        $"{newPet.Name} has been added successfully to your patients list.");
                 }
-            
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in AddPatientAsync: {ex.Message}");
                 await _dialogService.ShowErrorAsync("Error",
                     "Unable to show the Add Patient dialog. Please try again.");
-    }
-}
-
-private string CalculateAge(DateTimeOffset? birthDate)
-{
-    if (!birthDate.HasValue)
-        return "Unknown";
-
-    var today = DateTimeOffset.Now;
-    var age = today.Year - birthDate.Value.Year;
-
-    if (today.Month < birthDate.Value.Month ||
-        (today.Month == birthDate.Value.Month && today.Day < birthDate.Value.Day))
-    {
-        age--;
-    }
-
-    return age == 1 ? "1 year" : $"{age} years";
-}
-
-private async Task SaveNewPetAsync(PetItem newPet)
-{
-    try
-    {
-        await _databaseService.AddPetAsync(newPet);
-        allPets.Add(newPet);
-        OnPropertyChanged(nameof(FilteredPets));
-    }
-    catch (Exception ex)
-    {
-        Debug.WriteLine($"Error saving new pet: {ex.Message}");
-        await _dialogService.ShowErrorAsync("Error",
-            "Unable to save new pet to database.");
-    }
-}
-
-private async Task LoadPetsAsync()
-{
-    try
-    {
-        var pets = await _databaseService.GetAllPetsAsync();
-        allPets.Clear();
-        foreach (var pet in pets)
-        {
-            allPets.Add(pet);
+            }
         }
-        OnPropertyChanged(nameof(FilteredPets));
-    }
-    catch (Exception ex)
-    {
-        Debug.WriteLine($"Error loading pets: {ex.Message}");
-        await _dialogService.ShowErrorAsync("Error",
-            "Unable to load pets from database.");
-    }
-}
 
-public void OnAddPatientSaved(PetItem newPet)
-{
-    allPets.Add(newPet);
-    OnPropertyChanged(nameof(FilteredPets));
-    addPatientDialog?.Hide();
-}
+        private string CalculateAge(DateTimeOffset? birthDate)
+        {
+            if (!birthDate.HasValue)
+                return "Unknown";
+
+            var today = DateTimeOffset.Now;
+            var age = today.Year - birthDate.Value.Year;
+
+            if (today.Month < birthDate.Value.Month ||
+                (today.Month == birthDate.Value.Month && today.Day < birthDate.Value.Day))
+            {
+                age--;
+            }
+
+            return age == 1 ? "1 year" : $"{age} years";
+        }
+
+        private async Task SaveNewPetAsync(PetItem newPet)
+        {
+            try
+            {
+                await _databaseService.AddPetAsync(newPet);
+                allPets.Add(newPet);
+                OnPropertyChanged(nameof(FilteredPets));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error saving new pet: {ex.Message}");
+                await _dialogService.ShowErrorAsync("Error",
+                    "Unable to save new pet to database.");
+            }
+        }
+
+        public async Task LoadPetsAsync()
+        {
+            try
+            {
+                var pets = await _databaseService.GetAllPetsAsync();
+                allPets.Clear();
+                foreach (var pet in pets)
+                {
+                    allPets.Add(pet);
+                }
+                OnPropertyChanged(nameof(FilteredPets));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading pets: {ex.Message}");
+                await _dialogService.ShowErrorAsync("Error",
+                    "Unable to load pets from database.");
+            }
+        }
+
+        public void OnAddPatientSaved(PetItem newPet)
+        {
+            allPets.Add(newPet);
+            OnPropertyChanged(nameof(FilteredPets));
+            addPatientDialog?.Hide();
+        }
     }
 }

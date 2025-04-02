@@ -49,7 +49,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Text="Patients" 
+            <TextBlock Text="Patients"
                       Style="{StaticResource TitleLargeTextBlockStyle}"
                       VerticalAlignment="Center"/>
 
@@ -75,7 +75,7 @@
                 <TextBox Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          Style="{StaticResource SearchBoxStyle}"
                          Padding="32,5,5,5"/>
-                <FontIcon Glyph="&#xE721;" 
+                <FontIcon Glyph="&#xE721;"
                           FontSize="16"
                           Margin="8,0,0,0"
                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -116,7 +116,7 @@
                                 </Grid.RowDefinitions>
 
                                 <!-- Pet Image -->
-                                <Image Grid.Row="0" 
+                                <Image Grid.Row="0"
                                        Source="{x:Bind ImageUrl, Converter={StaticResource UriToImageSourceConverter}}"
                                        Stretch="UniformToFill"/>
 
@@ -152,7 +152,7 @@
                                     <TextBlock Text="{x:Bind Owner}"
                                              Style="{StaticResource BodyTextBlockStyle}"
                                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                   
+
                                     <Grid Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>

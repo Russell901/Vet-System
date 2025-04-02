@@ -9,6 +9,9 @@
         <ResourceDictionary>
             <converters:UriToImageSourceConverter x:Key="UriToImageSourceConverter"/>
             <converters:BooleanNegationConverter x:Key="BooleanNegationConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:StatusToColorConverter x:Key="StatusColorConverter"/>
+            <converters:BoolToVisibilityInverseConverter x:Key="BoolToVisibilityInverseConverter"/>
 
             <!-- Default Style for ContentDialog -->
             <Style x:Key="DefaultContentDialogStyle" TargetType="ContentDialog">
@@ -21,19 +24,19 @@
             </Style>
 
             <!-- Custom Style for ContentDialog -->
-            <Style x:Key="CustomContentDialogStyle" 
-                   BasedOn="{StaticResource DefaultContentDialogStyle}" 
+            <Style x:Key="CustomContentDialogStyle"
+                   BasedOn="{StaticResource DefaultContentDialogStyle}"
                    TargetType="ContentDialog">
                 <Setter Property="MaxWidth" Value="600"/>
                 <Setter Property="MinWidth" Value="400"/>
             </Style>
-            
+
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
             <!-- Other app resources here -->
-            
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

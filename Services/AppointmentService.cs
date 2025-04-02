@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Vet_System.Models;
 
@@ -31,40 +32,33 @@ namespace Vet_System.Services
                 using var connection = new MySqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                var query = @"
-                    SELECT 
-                        a.Id, 
-                        a.DateTime, 
-                        a.Reason,
-                        a.Status,
-                        p.Name AS PetName,
-                        o.Name AS OwnerName
-                    FROM 
-                        Appointments a
-                    INNER JOIN 
-                        Pets p ON a.PetId = p.Id
-                    INNER JOIN 
-                        Owners o ON p.OwnerId = o.Id
-                    ORDER BY 
-                        a.DateTime;";
+                string query = @"
+                   SELECT a.Id, p.Name AS pet_name, o.Name AS owner_name, a.DateTime,
+                   a.Reason, a.Status
+                   FROM Appointments a
+                   INNER JOIN Pets p ON a.PetId = p.Id
+                   INNER JOIN Owners o ON p.OwnerId = o.Id
+                   ORDER BY a.DateTime DESC";
 
-                using var command = new MySqlCommand(query, connection);
-                using var reader = await command.ExecuteReaderAsync();
-
-                while (await reader.ReadAsync())
+                using (var command = new MySqlCommand(query, connection))
                 {
-                    appointments.Add(new AppointmentItem(
-                        reader.GetString("Id"),
-                        reader.GetString("PetName"),
-                        reader.GetString("OwnerName"),
-                        reader.GetDateTime("DateTime"),
-                        reader.GetString("Reason"),
-                        reader.GetString("Status")
-                    ));
+                    using var reader = await command.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        appointments.Add(new AppointmentItem(
+                            reader["Id"].ToString(),
+                            reader["pet_name"].ToString(),
+                            reader["owner_name"].ToString(),
+                            Convert.ToDateTime(reader["DateTime"]),
+                            reader["Reason"].ToString(),
+                            reader["Status"].ToString()
+                        ));
+                    }
                 }
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error loading appointments: {ex.Message}");
                 if (_dialogService != null)
                 {
                     await _dialogService.ShowErrorAsync("Database Error",
@@ -76,6 +70,7 @@ namespace Vet_System.Services
             return appointments;
         }
 
+
         public async Task<AppointmentItem> CreateAppointmentAsync(AppointmentItem appointment)
         {
             try
@@ -83,7 +78,6 @@ namespace Vet_System.Services
                 using var connection = new MySqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                // First, get the PetId based on the PetName
                 int petId = await GetPetIdByNameAsync(connection, appointment.PetName);
 
                 if (petId == 0)
@@ -91,37 +85,28 @@ namespace Vet_System.Services
                     throw new Exception($"Pet '{appointment.PetName}' not found");
                 }
 
-                // Generate a unique ID if one is not provided
                 if (string.IsNullOrEmpty(appointment.Id))
                 {
                     appointment.Id = $"apt-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
                 }
 
                 var query = @"
-                    INSERT INTO Appointments (
-                        Id, 
-                        PetId,
-                        DateTime,
-                        Reason,
-                        Status
-                    ) VALUES (
-                        @id,
-                        @petId,
-                        @dateTime,
-                        @reason,
-                        @status
-                    );";
+                    INSERT INTO Appointments
+                    (Id, PetId, DateTime, Reason, Status)
+                    VALUES
+                    (@id, @petId, @dateTime, @reason, @status);";
 
-                using var command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", appointment.Id);
-                command.Parameters.AddWithValue("@petId", petId);
-                command.Parameters.AddWithValue("@dateTime", appointment.DateTime);
-                command.Parameters.AddWithValue("@reason", appointment.Reason);
-                command.Parameters.AddWithValue("@status", appointment.Status);
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", appointment.Id);
+                    command.Parameters.AddWithValue("@petId", petId);
+                    command.Parameters.AddWithValue("@dateTime", appointment.DateTime);
+                    command.Parameters.AddWithValue("@reason", appointment.Reason);
+                    command.Parameters.AddWithValue("@status", appointment.Status);
 
-                await command.ExecuteNonQueryAsync();
+                    await command.ExecuteNonQueryAsync();
+                }
 
-                // Also update the pet's NextAppointment field if the appointment is in the future
                 if (appointment.DateTime > DateTime.Now && appointment.Status == "scheduled")
                 {
                     await UpdatePetNextAppointmentAsync(connection, petId, appointment.DateTime);
@@ -131,6 +116,7 @@ namespace Vet_System.Services
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error creating appointment: {ex.Message}");
                 if (_dialogService != null)
                 {
                     await _dialogService.ShowErrorAsync("Database Error",
@@ -140,21 +126,13 @@ namespace Vet_System.Services
             }
         }
 
+
         public async Task<bool> UpdateAppointmentAsync(AppointmentItem appointment)
         {
-            try
+            using (var connection = new MySqlConnection(_connectionString))
             {
-                using var connection = new MySqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                // First, get the current appointment to check if anything changed
-                var currentAppointment = await GetAppointmentByIdAsync(appointment.Id);
-                if (currentAppointment == null)
-                {
-                    return false;
-                }
-
-                // Get the PetId based on the PetName
                 int petId = await GetPetIdByNameAsync(connection, appointment.PetName);
 
                 if (petId == 0)
@@ -162,86 +140,107 @@ namespace Vet_System.Services
                     throw new Exception($"Pet '{appointment.PetName}' not found");
                 }
 
-                var query = @"
-                    UPDATE Appointments SET
-                        PetId = @petId,
+                string query = @"
+                    UPDATE Appointments
+                    SET PetId = @petId,
                         DateTime = @dateTime,
                         Reason = @reason,
                         Status = @status
-                    WHERE Id = @id;";
+                    WHERE Id = @id";
 
-                using var command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", appointment.Id);
-                command.Parameters.AddWithValue("@petId", petId);
-                command.Parameters.AddWithValue("@dateTime", appointment.DateTime);
-                command.Parameters.AddWithValue("@reason", appointment.Reason);
-                command.Parameters.AddWithValue("@status", appointment.Status);
-
-                int rowsAffected = await command.ExecuteNonQueryAsync();
-
-                // If the appointment date/time or status changed, update the pet's NextAppointment
-                if (currentAppointment.DateTime != appointment.DateTime ||
-                    currentAppointment.Status != appointment.Status)
+                using (var command = new MySqlCommand(query, connection))
                 {
-                    await UpdatePetNextAppointmentAsync(connection, petId);
-                }
+                    command.Parameters.AddWithValue("@id", appointment.Id);
+                    command.Parameters.AddWithValue("@petId", petId);
+                    command.Parameters.AddWithValue("@dateTime", appointment.DateTime);
+                    command.Parameters.AddWithValue("@reason", appointment.Reason);
+                    command.Parameters.AddWithValue("@status", appointment.Status);
 
-                return rowsAffected > 0;
-            }
-            catch (Exception ex)
-            {
-                if (_dialogService != null)
-                {
-                    await _dialogService.ShowErrorAsync("Database Error",
-                        $"Error updating appointment: {ex.Message}");
+                    int result = await command.ExecuteNonQueryAsync();
+
+                    if (appointment.DateTime > DateTime.Now && appointment.Status == "scheduled")
+                    {
+                        await UpdatePetNextAppointmentAsync(connection, petId, appointment.DateTime);
+                    }
+
+                    return result > 0;
                 }
-                throw;
             }
         }
 
         public async Task<bool> CancelAppointmentAsync(string appointmentId)
         {
-            try
+            using (var connection = new MySqlConnection(_connectionString))
             {
-                using var connection = new MySqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                // First, get the current appointment
-                var currentAppointment = await GetAppointmentByIdAsync(appointmentId);
-                if (currentAppointment == null)
+                int petId = 0;
+                string petIdQuery = "SELECT PetId FROM Appointments WHERE Id = @id";
+                using (var petIdCommand = new MySqlCommand(petIdQuery, connection))
                 {
-                    return false;
+                    petIdCommand.Parameters.AddWithValue("@id", appointmentId);
+                    var result = await petIdCommand.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        petId = Convert.ToInt32(result);
+                    }
                 }
 
-                // Get the PetId based on the PetName
-                int petId = await GetPetIdByNameAsync(connection, currentAppointment.PetName);
+                string query = @"
+                    UPDATE Appointments
+                    SET Status = 'cancelled'
+                    WHERE Id = @id";
 
-                var query = @"
-                    UPDATE Appointments SET
-                        Status = 'cancelled'
-                    WHERE Id = @id;";
-
-                using var command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", appointmentId);
-
-                int rowsAffected = await command.ExecuteNonQueryAsync();
-
-                // Update the pet's NextAppointment field since this one is cancelled
-                if (rowsAffected > 0)
+                using (var command = new MySqlCommand(query, connection))
                 {
-                    await UpdatePetNextAppointmentAsync(connection, petId);
-                }
+                    command.Parameters.AddWithValue("@id", appointmentId);
+                    int rowsAffected = await command.ExecuteNonQueryAsync();
 
-                return rowsAffected > 0;
+                    if (rowsAffected > 0 && petId > 0)
+                    {
+                        await UpdatePetNextAppointmentAsync(connection, petId);
+                    }
+
+                    return rowsAffected > 0;
+                }
             }
-            catch (Exception ex)
+        }
+
+        public async Task<bool> DeleteAppointmentAsync(string appointmentId)
+        {
+            using (var connection = new MySqlConnection(_connectionString))
             {
-                if (_dialogService != null)
+                await connection.OpenAsync();
+
+                int petId = 0;
+                string petIdQuery = "SELECT PetId FROM Appointments WHERE Id = @id";
+                using (var petIdCommand = new MySqlCommand(petIdQuery, connection))
                 {
-                    await _dialogService.ShowErrorAsync("Database Error",
-                        $"Error cancelling appointment: {ex.Message}");
+                    petIdCommand.Parameters.AddWithValue("@id", appointmentId);
+                    var result = await petIdCommand.ExecuteScalarAsync();
+                    if (result != null && result != DBNull.Value)
+                    {
+                        petId = Convert.ToInt32(result);
+                    }
                 }
-                throw;
+
+                string query = @"
+                    DELETE FROM Appointments
+                    WHERE Id = @id";
+
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", appointmentId);
+                    int rowsAffected = await command.ExecuteNonQueryAsync();
+
+                    // Update the pet's next appointment since we just deleted one
+                    if (rowsAffected > 0 && petId > 0)
+                    {
+                        await UpdatePetNextAppointmentAsync(connection, petId);
+                    }
+
+                    return rowsAffected > 0;
+                }
             }
         }
 
@@ -253,20 +252,20 @@ namespace Vet_System.Services
                 await connection.OpenAsync();
 
                 var query = @"
-                    SELECT 
-                        a.Id, 
-                        a.DateTime, 
+                    SELECT
+                        a.Id,
+                        a.DateTime,
                         a.Reason,
                         a.Status,
-                        p.Name AS PetName,
-                        o.Name AS OwnerName
-                    FROM 
+                        p.Name AS pet_name,
+                        o.Name AS owner_name
+                    FROM
                         Appointments a
-                    INNER JOIN 
+                    INNER JOIN
                         Pets p ON a.PetId = p.Id
-                    INNER JOIN 
+                    INNER JOIN
                         Owners o ON p.OwnerId = o.Id
-                    WHERE 
+                    WHERE
                         a.Id = @id;";
 
                 using var command = new MySqlCommand(query, connection);
@@ -277,12 +276,12 @@ namespace Vet_System.Services
                 if (await reader.ReadAsync())
                 {
                     return new AppointmentItem(
-                        reader.GetString("Id"),
-                        reader.GetString("PetName"),
-                        reader.GetString("OwnerName"),
+                        reader["Id"].ToString(),
+                        reader["pet_name"].ToString(),
+                        reader["owner_name"].ToString(),
                         reader.GetDateTime("DateTime"),
-                        reader.GetString("Reason"),
-                        reader.GetString("Status")
+                        reader["Reason"].ToString(),
+                        reader["Status"].ToString()
                     );
                 }
 
@@ -290,6 +289,7 @@ namespace Vet_System.Services
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error retrieving appointment: {ex.Message}");
                 if (_dialogService != null)
                 {
                     await _dialogService.ShowErrorAsync("Database Error",
@@ -328,14 +328,14 @@ namespace Vet_System.Services
                 System.Diagnostics.Debug.WriteLine("Available pets in database:");
                 while (await reader.ReadAsync())
                 {
-                    System.Diagnostics.Debug.WriteLine($"- Pet ID: {reader["Id"]}, Name: {reader["Name"]}");
+                    Debug.WriteLine($"- Pet ID: {reader["Id"]}, Name: {reader["Name"]}");
                 }
 
                 return 0;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error in GetPetIdByNameAsync: {ex.Message}");
+                Debug.WriteLine($"Error in GetPetIdByNameAsync: {ex.Message}");
                 throw;
             }
         }
@@ -353,10 +353,10 @@ namespace Vet_System.Services
                 else
                 {
                     var nextApptQuery = @"
-                        SELECT MIN(DateTime) 
-                        FROM Appointments 
-                        WHERE PetId = @petId 
-                          AND Status = 'scheduled' 
+                        SELECT MIN(DateTime)
+                        FROM Appointments
+                        WHERE PetId = @petId
+                          AND Status = 'scheduled'
                           AND DateTime > NOW();";
 
                     using var nextApptCmd = new MySqlCommand(nextApptQuery, connection);
@@ -370,8 +370,8 @@ namespace Vet_System.Services
                 }
 
                 var updateQuery = @"
-                    UPDATE Pets 
-                    SET NextAppointment = @nextAppointment 
+                    UPDATE Pets
+                    SET NextAppointment = @nextAppointment
                     WHERE Id = @petId;";
 
                 using var updateCmd = new MySqlCommand(updateQuery, connection);
@@ -383,6 +383,7 @@ namespace Vet_System.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error updating pet's next appointment: {ex.Message}");
+                // Just log the error but don't throw - this is secondary functionality
             }
         }
     }

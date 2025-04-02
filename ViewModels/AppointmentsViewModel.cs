@@ -71,7 +71,6 @@ namespace Vet_System.ViewModels
             }
         }
 
-        // Constructor for the main AppointmentsViewModel
         public AppointmentsViewModel(IAppointmentService? appointmentService = null)
         {
             _appointmentService = appointmentService ?? new AppointmentService(DatabaseService.DefaultConnectionString);
@@ -144,20 +143,17 @@ namespace Vet_System.ViewModels
         {
             try
             {
-                var newAppointment = new AppointmentItem(
-                    string.Empty, // Use empty string instead of null
-                    "New Pet",
-                    "New Owner",
-                    DateTime.Now.AddDays(3).Date.AddHours(8),
-                    "Wellness check",
-                    "scheduled"
+                var xamlRoot = App.MainWindow.Content is FrameworkElement mainElement ? mainElement.XamlRoot : null;
+                var viewModel = new AppointmentFormViewModel(
+                    null,
+                    _appointmentService,
+                    new PetService(DatabaseService.DefaultConnectionString),
+                    xamlRoot 
                 );
-
-                var viewModel = new AppointmentFormViewModel(newAppointment);
 
                 var dialog = new ContentDialog
                 {
-                    XamlRoot = App.MainWindow.Content is FrameworkElement element ? element.XamlRoot : null,
+                    XamlRoot = xamlRoot,
                     Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
                     Content = new AppointmentFormDialog(viewModel),
                     Title = "Schedule Appointment",
@@ -169,7 +165,7 @@ namespace Vet_System.ViewModels
 
                 dialog.PrimaryButtonClick += async (s, e) =>
                 {
-                    e.Cancel = true; 
+                    e.Cancel = true;
                     try
                     {
                         await viewModel.Save();
@@ -177,37 +173,44 @@ namespace Vet_System.ViewModels
                         if (!viewModel.HasValidationErrors)
                         {
                             dialog.Hide();
+
+                            var createdAppointment = await viewModel.GetResultAsync();
+                            if (createdAppointment != null)
+                            {
+                                await LoadAppointmentsAsync();
+
+                                var successDialog = new ContentDialog
+                                {
+                                    XamlRoot = App.MainWindow.Content is FrameworkElement successElement ? successElement.XamlRoot : null,
+                                    Title = "Appointment Scheduled",
+                                    Content = "The appointment has been successfully scheduled.",
+                                    CloseButtonText = "OK"
+                                };
+                                await successDialog.ShowAsync();
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
+                        dialog.Hide();
                         var errorDialog = new ContentDialog
                         {
-                            XamlRoot = App.MainWindow.Content is FrameworkElement el ? el.XamlRoot : null,
+                            XamlRoot = App.MainWindow.Content is FrameworkElement errorElement ? errorElement.XamlRoot : null,
                             Title = "Error Saving Appointment",
-                            Content = $"Could not save appointment: {ex.Message}\n\nDetails: {ex}",
+                            Content = $"Could not save appointment: {ex.Message}",
                             CloseButtonText = "OK"
                         };
                         await errorDialog.ShowAsync();
                     }
                 };
 
-                var result = await dialog.ShowAsync();
-
-                if (result == ContentDialogResult.Primary)
-                {
-                    var createdAppointment = await viewModel.GetResultAsync();
-                    if (createdAppointment != null)
-                    {
-                        await LoadAppointmentsAsync();
-                    }
-                }
+                await dialog.ShowAsync();
             }
             catch (Exception ex)
             {
                 var errorDialog = new ContentDialog
                 {
-                    XamlRoot = App.MainWindow.Content is FrameworkElement element ? element.XamlRoot : null,
+                    XamlRoot = App.MainWindow.Content is FrameworkElement errorElement ? errorElement.XamlRoot : null,
                     Title = "Error",
                     Content = $"Error creating appointment: {ex.Message}",
                     CloseButtonText = "OK"
@@ -216,11 +219,9 @@ namespace Vet_System.ViewModels
             }
         }
 
-
         private void ViewCalendar()
         {
-            //ToDo create calendar view
-            System.Diagnostics.Debug.WriteLine("Viewing calendar");
+            Debug.WriteLine("Viewing calendar");
         }
     }
 

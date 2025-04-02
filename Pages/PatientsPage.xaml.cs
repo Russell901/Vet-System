@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using System.Threading.Tasks;
 using Vet_System.ViewModels;
 
 namespace Vet_System.Pages
@@ -22,6 +23,7 @@ namespace Vet_System.Pages
             if (ViewModel != null)
             {
                 ViewModel.XamlRoot = this.XamlRoot;
+                Task.Run(() => ViewModel.LoadPetsAsync());
             }
             else
             {

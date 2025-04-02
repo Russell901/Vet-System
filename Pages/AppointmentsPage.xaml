@@ -29,13 +29,13 @@
 
         <StackPanel Grid.Row="1" Spacing="16" Margin="0,24,0,24"
                     Orientation="Horizontal">
-            <AutoSuggestBox Width="300" 
+            <AutoSuggestBox Width="300"
                             PlaceholderText="Search appointments..."
                             QueryIcon="Find"
                             Text="{x:Bind ViewModel.SearchTerm, Mode=TwoWay}"
                             TextChanged="OnSearchTextChanged"/>
 
-            <ComboBox Header="Status" 
+            <ComboBox Header="Status"
                       SelectedValue="{x:Bind ViewModel.FilterStatus, Mode=TwoWay}"
                       ItemsSource="{x:Bind ViewModel.StatusFilters}"
                       DisplayMemberPath="DisplayName"
@@ -44,18 +44,15 @@
 
             <HyperlinkButton Content="View Calendar"
                              Command="{x:Bind ViewModel.ViewCalendarCommand}">
-                
-                   
-                
             </HyperlinkButton>
 
-            <Button Content="New Appointment" 
+            <Button Content="New Appointment"
                     Command="{x:Bind ViewModel.NewAppointmentCommand}">
             </Button>
         </StackPanel>
 
         <!-- Appointments List -->
-        <ListView Grid.Row="2" 
+        <ListView Grid.Row="2"
                  ItemsSource="{x:Bind ViewModel.FilteredAppointments, Mode=OneWay}"
                  Style="{StaticResource AppointmentsListViewStyle}"
                  VirtualizingStackPanel.VirtualizationMode="Recycling"
@@ -83,7 +80,7 @@
 
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:AppointmentItemViewModel">
-                    <Grid Padding="12" 
+                    <Grid Padding="12"
                           Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*"/>
@@ -95,30 +92,30 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Pet Name -->
-                        <TextBlock Text="{x:Bind PetName}" 
+                        <TextBlock Text="{x:Bind PetName}"
                                    Style="{StaticResource BodyStrongTextBlockStyle}"/>
 
                         <!-- Owner -->
-                        <TextBlock Grid.Column="1" 
-                                   Text="{x:Bind OwnerName}" 
+                        <TextBlock Grid.Column="1"
+                                   Text="{x:Bind OwnerName}"
                                    Style="{StaticResource BodyTextBlockStyle}"/>
 
                         <!-- Date/Time -->
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="{x:Bind Date}" 
+                            <TextBlock Text="{x:Bind Date}"
                                        Style="{StaticResource BodyTextBlockStyle}"/>
-                            <TextBlock Text="{x:Bind Time}" 
+                            <TextBlock Text="{x:Bind Time}"
                                        Style="{StaticResource CaptionTextBlockStyle}"/>
                         </StackPanel>
 
                         <!-- Reason -->
-                        <TextBlock Grid.Column="3" 
-                                   Text="{x:Bind Reason}" 
+                        <TextBlock Grid.Column="3"
+                                   Text="{x:Bind Reason}"
                                    Style="{StaticResource BodyTextBlockStyle}"
                                    TextWrapping="WrapWholeWords"/>
 
                         <!-- Status -->
-                        <Border Grid.Column="4" 
+                        <Border Grid.Column="4"
                                 Background="{x:Bind Status, Converter={StaticResource StatusColorConverter}, ConverterParameter=background}"
                                 CornerRadius="4"
                                 HorizontalAlignment="Left">
