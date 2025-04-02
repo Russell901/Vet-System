@@ -36,19 +36,30 @@ namespace Vet_System.Pages
                     {
                         args.ItemContainer.Opacity = 0;
                         args.ItemContainer.Translation = new Vector3(0, 20, 0);
-                    }
-                    if (args.Phase == 1)
-                    {
-                        var compositor = Microsoft.UI.Xaml.Media.CompositionTarget.GetCompositorForCurrentThread();
-                        var animation = compositor.CreateVector3KeyFrameAnimation();
-                        animation.InsertKeyFrame(1, new Vector3(0, 0, 0));
-                        animation.Duration = TimeSpan.FromMilliseconds(200);
-                        animation.DelayTime = TimeSpan.FromMilliseconds(args.ItemIndex * 50);
-
-                        args.ItemContainer.StartAnimation(animation);
-                        args.ItemContainer.Opacity = 1;
+                        args.RegisterUpdateCallback(OnPhaseCallback);
                     }
                 };
+            }
+        }
+
+        private static void OnPhaseCallback(ListViewBase sender, ContainerContentChangingEventArgs args)
+        {
+            // Just set the final properties directly instead of using animations
+            args.ItemContainer.Opacity = 1;
+            args.ItemContainer.Translation = new Vector3(0, 0, 0);
+
+            // Add a slight delay based on item index
+            var delay = args.ItemIndex * 30;
+            if (delay > 0)
+            {
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(delay) };
+                timer.Tick += (s, e) =>
+                {
+                    args.ItemContainer.Opacity = 1;
+                    args.ItemContainer.Translation = new Vector3(0, 0, 0);
+                    timer.Stop();
+                };
+                timer.Start();
             }
         }
     }

@@ -131,7 +131,8 @@ namespace Vet_System.ViewModels
                 (string.IsNullOrEmpty(SearchTerm) ||
                 a.PetName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
                 a.OwnerName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)) &&
-                (FilterStatus == "all" || a.Status.Equals(FilterStatus, StringComparison.OrdinalIgnoreCase)));
+                (FilterStatus == "all" || a.Status.Equals(FilterStatus, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
 
             foreach (var appointment in filtered)
             {

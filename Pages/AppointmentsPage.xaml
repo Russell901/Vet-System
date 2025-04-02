@@ -8,8 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vc="using:Vet_System.Converters"
     xmlns:vm="using:Vet_System.ViewModels"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d">
 
     <Page.Resources>
         <vc:StatusToColorConverter x:Key="StatusColorConverter"/>
@@ -58,8 +57,7 @@
                  VirtualizingStackPanel.VirtualizationMode="Recycling"
                  Loaded="OnListViewLoaded">
             <ListView.Header>
-                <Grid Background="{ThemeResource SystemControlBackgroundAltHighBrush}"
-                      Padding="12">
+                <Grid Padding="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="2*"/>
@@ -80,8 +78,7 @@
 
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:AppointmentItemViewModel">
-                    <Grid Padding="12"
-                          Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
+                    <Grid Padding="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="2*"/>
