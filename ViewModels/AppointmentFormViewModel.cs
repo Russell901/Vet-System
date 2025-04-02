@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Vet_System.Models;
@@ -19,8 +18,9 @@ namespace Vet_System.ViewModels
         private readonly IAppointmentService? _appointmentService;
         private readonly IPetService? _petService;
         private readonly TaskCompletionSource<AppointmentItem?> _taskCompletionSource;
+        private readonly XamlRoot? _xamlRoot;
+        private readonly AppointmentItem? _originalAppointment;
 
-        private AppointmentItem _appointment;
         private PetItem? _selectedPet;
         private string _ownerName = string.Empty;
         private DateTimeOffset _appointmentDate;
@@ -30,13 +30,11 @@ namespace Vet_System.ViewModels
         private string _status = "scheduled";
         private bool _hasValidationErrors;
         private ObservableCollection<string> _validationErrors = new();
-        private bool _isNewAppointment;
+        public ObservableCollection<PetItem> Pets { get; } = new();
+        public bool IsEditMode => _originalAppointment != null;
         private bool _isLoadingPets = false;
 
-        public string Title => IsNewAppointment ? "Schedule New Appointment" : "Edit Appointment";
-        public bool IsNewAppointment => _isNewAppointment;
         public DateTimeOffset MinDate => DateTimeOffset.Now;
-        public ObservableCollection<PetItem> Pets { get; } = new();
         public List<string> AppointmentTypes { get; } = new()
         {
             "Wellness Check",
@@ -47,12 +45,6 @@ namespace Vet_System.ViewModels
             "Follow-up",
             "Dental Cleaning",
             "Other"
-        };
-        public List<string> StatusOptions { get; } = new()
-        {
-            "scheduled",
-            "completed",
-            "cancelled"
         };
 
         public ObservableCollection<string> ValidationErrors
@@ -147,42 +139,51 @@ namespace Vet_System.ViewModels
             set => SetProperty(ref _status, value);
         }
 
+        public List<StatusFilter> StatusOptions { get; } = new()
+        {
+            new StatusFilter("Scheduled", "scheduled"),
+            new StatusFilter("Completed", "completed"),
+            new StatusFilter("Cancelled", "cancelled")
+        };
+
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
-
-        public AppointmentFormViewModel() : this(null)
-        {
-        }
-        private XamlRoot _xamlRoot;
         public AppointmentFormViewModel(
-            AppointmentItem? appointment = null,
-            IAppointmentService? appointmentService = null,
-            IPetService? petService = null,
-            XamlRoot? xamlRoot = null)
+            AppointmentItem? appointment,
+            IAppointmentService? appointmentService,
+            IPetService? petService,
+            XamlRoot? xamlRoot)
         {
-            _appointmentService = appointmentService ?? new AppointmentService(DatabaseService.DefaultConnectionString);
-            _petService = petService ?? new PetService(DatabaseService.DefaultConnectionString);
+            _originalAppointment = appointment;
+            _appointmentService = appointmentService ??
+                throw new ArgumentException(nameof(appointmentService));
+            _petService = petService ??
+                throw new ArgumentException(nameof(petService));
             _taskCompletionSource = new TaskCompletionSource<AppointmentItem?>();
-            _isNewAppointment = appointment == null;
             _xamlRoot = xamlRoot;
 
-            _appointment = appointment ?? new AppointmentItem(
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                DateTime.Now.AddDays(1).Date.Add(new TimeSpan(9, 0, 0)),
-                string.Empty,
-                "scheduled");
+            // Load initial data
+            _ = LoadPetsAsync();
 
-            AppointmentDate = _appointment.DateTime.Date;
-            AppointmentTime = _appointment.DateTime.TimeOfDay;
-            Reason = _appointment.Reason;
-            Status = _appointment.Status;
+            // If editing an existing appointment, populate fields
+            if (appointment != null)
+            {
+                _appointmentDate = appointment.DateTime.Date;
+                _appointmentTime = appointment.DateTime.TimeOfDay;
+                _reason = appointment.Reason;
+                _status = appointment.Status;
+                // Pet will be set after pets are loaded
+            }
 
-            if (!string.IsNullOrEmpty(_appointment.Reason))
+            AppointmentDate = DateTime.Now.AddDays(1).Date.Add(new TimeSpan(9, 0, 0));
+            AppointmentTime = _originalAppointment?.DateTime.TimeOfDay ?? TimeSpan.Zero;
+            Reason = _originalAppointment?.Reason ?? string.Empty;
+            Status = _originalAppointment?.Status ?? "scheduled";
+
+            if (!string.IsNullOrEmpty(_originalAppointment?.Reason))
             {
                 SelectedAppointmentType = AppointmentTypes.FirstOrDefault(t =>
-                    _appointment.Reason.Contains(t, StringComparison.OrdinalIgnoreCase)) ?? AppointmentTypes[0];
+                    _originalAppointment.Reason.Contains(t, StringComparison.OrdinalIgnoreCase)) ?? AppointmentTypes[0];
             }
             else
             {
@@ -191,8 +192,6 @@ namespace Vet_System.ViewModels
 
             SaveCommand = new AsyncRelayCommand(Save, CanSave);
             CancelCommand = new RelayCommand(Cancel);
-
-            _ = LoadPetsAsync();
         }
 
         private void UpdateCanSaveCommand()
@@ -204,23 +203,18 @@ namespace Vet_System.ViewModels
         {
             try
             {
-                if (_petService == null)
-                    return;
-
-                IsLoadingPets = true;
-
-                var pets = await _petService.GetPetsAsync();
+                var petsList = await _petService.GetPetsAsync();
                 Pets.Clear();
 
-                foreach (var pet in pets)
+                foreach (var pet in petsList)
                 {
                     Pets.Add(pet);
                 }
 
-                if (!string.IsNullOrEmpty(_appointment.PetName) && !_isNewAppointment)
+                if (_originalAppointment != null)
                 {
-                    SelectedPet = Pets.FirstOrDefault(p => p.Name == _appointment.PetName);
-                    OwnerName = _appointment.OwnerName;
+                    SelectedPet = Pets.FirstOrDefault(p => p.Name == _originalAppointment.PetName);
+                    OwnerName = _originalAppointment.OwnerName;
                 }
             }
             catch (Exception ex)
@@ -277,33 +271,34 @@ namespace Vet_System.ViewModels
             {
                 var appointmentDateTime = AppointmentDate.Date.Add(AppointmentTime);
 
-                if (IsNewAppointment)
+                AppointmentItem appointment;
+                if (IsEditMode)
                 {
-                    var appointmentItem = new AppointmentItem(
-                        string.Empty,
+                    // Update existing appointment
+                    appointment = new AppointmentItem(
+                        _originalAppointment.Id,
                         SelectedPet.Name,
                         OwnerName,
                         appointmentDateTime,
-                        $"{SelectedAppointmentType}: {Reason}",
+                        Reason,
                         Status
                     );
-
-                    System.Diagnostics.Debug.WriteLine($"Creating appointment for pet: {SelectedPet.Name} (ID: {SelectedPet.Id})");
-
-                    var createdAppointment = await _appointmentService.CreateAppointmentAsync(appointmentItem);
-                    _taskCompletionSource.SetResult(createdAppointment);
+                    await _appointmentService.UpdateAppointmentAsync(appointment);
                 }
                 else
                 {
-                    _appointment.PetName = SelectedPet.Name;
-                    _appointment.OwnerName = OwnerName;
-                    _appointment.DateTime = appointmentDateTime;
-                    _appointment.Reason = $"{SelectedAppointmentType}: {Reason}";
-                    _appointment.Status = Status;
+                    appointment = new AppointmentItem(
+                       null,
+                       SelectedPet.Name,
+                       OwnerName,
+                       appointmentDateTime,
+                       Reason,
+                       "scheduled"
+                   );
 
-                    await _appointmentService.UpdateAppointmentAsync(_appointment);
-                    _taskCompletionSource.SetResult(_appointment);
+                    await _appointmentService.CreateAppointmentAsync(appointment);
                 }
+                _result = appointment;
             }
             catch (Exception ex)
             {
@@ -313,12 +308,18 @@ namespace Vet_System.ViewModels
             }
         }
 
+        private AppointmentItem _result;
+
+        public Task<AppointmentItem> GetResultAsync()
+        {
+            return Task.FromResult(_result);
+        }
+
         private void Cancel()
         {
             _taskCompletionSource.SetResult(null);
         }
 
-        public Task<AppointmentItem?> GetResultAsync() => _taskCompletionSource.Task;
 
         private async Task ShowErrorDialog(string title, string message)
         {

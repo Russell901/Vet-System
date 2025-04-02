@@ -1,8 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Vet_System.Components.Dialogs;
 using Vet_System.Models;
 using Vet_System.Services;
 
@@ -44,17 +47,92 @@ namespace Vet_System.ViewModels
 
         private async Task EditAppointment()
         {
-            //ToDo: Create a dialog for editing appoinyments
             try
             {
-                _appointment.Reason = $"{_appointment.Reason} (Updated)";
-                await _appointmentService.UpdateAppointmentAsync(_appointment);
+                // Get the existing appointment details from the service
+                var currentAppointment = await _appointmentService.GetAppointmentByIdAsync(Id);
+                if (currentAppointment == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error: Could not find appointment with ID {Id}");
+                    return;
+                }
 
-                await RefreshParent();
+                var xamlRoot = App.MainWindow.Content is FrameworkElement mainElement ? mainElement.XamlRoot : null;
+                var viewModel = new AppointmentFormViewModel(
+                    currentAppointment,  // Pass the current appointment for editing
+                    _appointmentService,
+                    new PetService(DatabaseService.DefaultConnectionString),
+                    xamlRoot
+                );
+
+                var dialog = new ContentDialog
+                {
+                    XamlRoot = xamlRoot,
+                    Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                    Content = new AppointmentFormDialog(viewModel),
+                    Title = "Edit Appointment",
+                    PrimaryButtonText = "Save",
+                    SecondaryButtonText = "Cancel",
+                    DefaultButton = ContentDialogButton.Primary,
+                    IsPrimaryButtonEnabled = true
+                };
+
+                dialog.PrimaryButtonClick += async (s, e) =>
+                {
+                    e.Cancel = true;
+                    try
+                    {
+                        await viewModel.Save();
+
+                        if (!viewModel.HasValidationErrors)
+                        {
+                            dialog.Hide();
+
+                            var updatedAppointment = await viewModel.GetResultAsync();
+                            if (updatedAppointment != null)
+                            {
+                                // Refresh the list to show the updated appointment
+                                await RefreshParent();
+
+                                var successDialog = new ContentDialog
+                                {
+                                    XamlRoot = xamlRoot,
+                                    Title = "Appointment Updated",
+                                    Content = "The appointment has been successfully updated.",
+                                    CloseButtonText = "OK"
+                                };
+                                await successDialog.ShowAsync();
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        dialog.Hide();
+                        var errorDialog = new ContentDialog
+                        {
+                            XamlRoot = xamlRoot,
+                            Title = "Error Updating Appointment",
+                            Content = $"Could not update appointment: {ex.Message}",
+                            CloseButtonText = "OK"
+                        };
+                        await errorDialog.ShowAsync();
+                    }
+                };
+
+                await dialog.ShowAsync();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error editing appointment: {ex.Message}");
+
+                var errorDialog = new ContentDialog
+                {
+                    XamlRoot = App.MainWindow.Content is FrameworkElement errorElement ? errorElement.XamlRoot : null,
+                    Title = "Error",
+                    Content = $"Error editing appointment: {ex.Message}",
+                    CloseButtonText = "OK"
+                };
+                await errorDialog.ShowAsync();
             }
         }
 
