@@ -13,6 +13,7 @@
 
     <Page.Resources>
         <converters:UriToImageSourceConverter x:Key="UriToImageSourceConverter"/>
+        <converters:DateToAgeConverter x:Key="DateToAgeConverter"/>
         <Style x:Key="PetCardStyle" TargetType="Border">
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -35,7 +36,7 @@
         </Style>
     </Page.Resources>
 
-    <Grid x:Name="ContentArea" Padding="24">
+    <Grid x:Name="ContentArea" Padding="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -135,7 +136,7 @@
                                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                                 CornerRadius="12"
                                                 Padding="8,4">
-                                            <TextBlock Text="{x:Bind DateOfBirth}"
+                                            <TextBlock Text="{x:Bind DateOfBirth, Converter={StaticResource DateToAgeConverter}}"
                                                      Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
                                                      Style="{StaticResource CaptionTextBlockStyle}"/>
                                         </Border>
@@ -160,7 +161,7 @@
                                         </Grid.ColumnDefinitions>
 
                                         <HyperlinkButton Content="View Details"
-                                                       Command="{Binding ElementName=PatientsPage, Path=ViewModel.ViewPetDetailsCommand}"
+                                                       Command="{Binding DataContext.ViewDetailsCommand, ElementName=ContentArea}"
                                                        CommandParameter="{x:Bind Id}"/>
 
                                         <TextBlock Grid.Column="1"

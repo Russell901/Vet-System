@@ -225,7 +225,7 @@ namespace Vet_System.ViewModels
         }
 
         [RelayCommand]
-        private async Task ViewPetDetailsAsync(string petId)
+        private async Task ViewDetailsAsync(string petId)
         {
             try
             {
@@ -261,9 +261,9 @@ namespace Vet_System.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error showing pet details: {ex.Message}");
+                Debug.WriteLine($"Error in ViewDetailsAsync: {ex.Message}");
                 await _dialogService.ShowErrorAsync("Error",
-                    "Unable to display pet details. Please try again.");
+                    "Unable to show pet details. Please try again.");
             }
         }
 

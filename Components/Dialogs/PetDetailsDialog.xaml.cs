@@ -11,6 +11,7 @@ namespace Vet_System.Components.Dialogs
         {
             this.InitializeComponent();
             ViewModel = new PetDetailsDialogViewModel(petId, xamlRoot); // Pass XamlRoot to ViewModel
+            DataContext = ViewModel;
         }
     }
 }
