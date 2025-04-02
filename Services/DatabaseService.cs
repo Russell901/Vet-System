@@ -5,14 +5,13 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Data;
 using Vet_System.Models;
-using Org.BouncyCastle.Asn1.X9;
 
 namespace Vet_System.Services
 {
     public class DatabaseService
     {
         private readonly string _connectionString;
-        private readonly XamlRoot _xamlRoot;
+        private XamlRoot _xamlRoot;
         private readonly DatabaseInitializer _initializer;
         private readonly DialogService _dialogService;
         private AppointmentService _appointmentService;
@@ -66,10 +65,13 @@ namespace Vet_System.Services
                 await connection.OpenAsync();
 
                 var query = @"
-                    SELECT 
+                    SELECT
                         p.*,
                         o.Name as OwnerName,
-                        o.Phone as OwnerPhone
+                        o.Phone as OwnerPhone,
+                        (SELECT MIN(a.DateTime)
+                         FROM Appointments a
+                         WHERE a.PetId = p.Id AND a.DateTime > NOW()) AS NextAppointmentDate
                     FROM Pets p
                     LEFT JOIN Owners o ON p.OwnerId = o.Id
                     ORDER BY p.Name;";
@@ -79,15 +81,22 @@ namespace Vet_System.Services
 
                 while (await reader.ReadAsync())
                 {
+                    DateTime nextAppointment = DateTime.MinValue;
+                    if (!reader.IsDBNull(reader.GetOrdinal("NextAppointmentDate")))
+                    {
+                        nextAppointment = reader.GetDateTime("NextAppointmentDate");
+                    }
+
                     pets.Add(new PetItem(
-                         reader.GetInt32("Id").ToString(),  
-                         reader.GetString("Name"),          
-                         reader.GetString("Species"),      
-                         reader.GetString("Breed"),        
-                         reader.GetDateTime("DateOfBirth"), 
-                         reader.GetInt32("OwnerId").ToString(), 
-                         reader.GetString("OwnerName"),     
-                         reader.GetString("ImageUrl")    
+                         reader.GetInt32("Id").ToString(),
+                         reader.GetString("Name"),
+                         reader.GetString("Species"),
+                         reader.GetString("Breed"),
+                         reader.GetDateTime("DateOfBirth"),
+                         reader.GetInt32("OwnerId").ToString(),
+                         reader.GetString("OwnerName"),
+                         reader.GetString("ImageUrl"),
+                         nextAppointment
                      ));
                 }
             }
@@ -116,10 +125,10 @@ namespace Vet_System.Services
                 // Then add the pet
                 var addPetQuery = @"
                     INSERT INTO Pets (
-                        Name, Species, Breed, DateOfBirth, 
+                        Name, Species, Breed, DateOfBirth,
                         OwnerId, ImageUrl, NextAppointment
                     ) VALUES (
-                        @name, @species, @breed, @dateOfBirth, 
+                        @name, @species, @breed, @dateOfBirth,
                         @ownerId, @imageUrl, @nextAppointment
                     );";
 
@@ -162,20 +171,6 @@ namespace Vet_System.Services
 
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result);
-        }
-
-        private string CalculateAge(DateTime birthDate)
-        {
-            var today = DateTime.Now;
-            var age = today.Year - birthDate.Year;
-
-            if (today.Month < birthDate.Month ||
-                (today.Month == birthDate.Month && today.Day < birthDate.Day))
-            {
-                age--;
-            }
-
-            return age == 1 ? "1 year" : $"{age} years";
         }
     }
 }

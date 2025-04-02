@@ -14,6 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Components\Dialogs\AddPatientDialog.xaml" />
+    <None Remove="Components\Dialogs\PetDetailsDialog.xaml" />
     <None Remove="Components\Sidebar.xaml" />
     <None Remove="Pages\AppointmentsPage.xaml" />
     <None Remove="Pages\DashboardPage.xaml" />
@@ -106,6 +107,9 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Page Update="Components\Dialogs\PetDetailsDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Components\Dialogs\AppointmentFormDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

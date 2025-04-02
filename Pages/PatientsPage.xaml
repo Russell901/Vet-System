@@ -159,15 +159,16 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <!--<HyperlinkButton Content="View Details"
-                                                       Command="{x:Bind ViewDetailsCommand}"/>-->
+                                        <HyperlinkButton Content="View Details"
+                                                       Command="{Binding ElementName=PatientsPage, Path=ViewModel.ViewPetDetailsCommand}"
+                                                       CommandParameter="{x:Bind Id}"/>
 
-                                        <!--<TextBlock Grid.Column="1"
-                                                 Text="{x:Bind NextAppointmentDate}"
+                                        <TextBlock Grid.Column="1"
+                                                 Text="{x:Bind NextAppointmentDate, TargetNullValue='No upcoming appointments'}"
                                                  Style="{StaticResource CaptionTextBlockStyle}"
                                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                  HorizontalAlignment="Right"
-                                                 VerticalAlignment="Center"/>-->
+                                                 VerticalAlignment="Center"/>
                                     </Grid>
                                 </StackPanel>
                             </Grid>

@@ -27,11 +27,11 @@ namespace Vet_System.Services
                     await connection.OpenAsync();
 
                     string query = @"
-                        SELECT p.id, p.name, p.species, p.breed, p.dateOfBirth, 
-                                p.ownerId, o.name as owner, p.imageUrl
-                        FROM pets p
-                        JOIN owners o ON p.ownerId = o.id
-                        ORDER BY p.name";
+                            SELECT p.id, p.name, p.species, p.breed, p.dateOfBirth,
+                                    p.ownerId, o.name as owner, p.imageUrl, p.nextAppointmentDate
+                            FROM pets p
+                            JOIN owners o ON p.ownerId = o.id
+                            ORDER BY p.name";
 
                     using (var command = new MySqlCommand(query, connection))
                     {
@@ -44,6 +44,12 @@ namespace Vet_System.Services
                                 imageUrl = reader["imageUrl"].ToString();
                             }
 
+                            DateTime nextAppointmentDate = DateTime.MinValue;
+                            if (reader.HasColumn("nextAppointmentDate") && !reader.IsDBNull(reader.GetOrdinal("nextAppointmentDate")))
+                            {
+                                nextAppointmentDate = Convert.ToDateTime(reader["nextAppointmentDate"]);
+                            }
+
                             pets.Add(new PetItem(
                                 reader["id"].ToString(),
                                 reader["name"].ToString(),
@@ -52,7 +58,8 @@ namespace Vet_System.Services
                                 Convert.ToDateTime(reader["dateOfBirth"]),
                                 reader["ownerId"].ToString(),
                                 reader["owner"].ToString(),
-                                imageUrl
+                                imageUrl,
+                                nextAppointmentDate
                             ));
                         }
                     }
@@ -77,11 +84,11 @@ namespace Vet_System.Services
                     await connection.OpenAsync();
 
                     string query = @"
-                        SELECT p.id, p.name, p.species, p.breed, p.dateOfBirth, 
-                               p.ownerId, o.name as owner, p.imageUrl
-                        FROM pets p
-                        JOIN owners o ON p.ownerId = o.id
-                        WHERE p.id = @petId";
+                            SELECT p.id, p.name, p.species, p.breed, p.dateOfBirth,
+                                   p.ownerId, o.name as owner, p.imageUrl, p.nextAppointmentDate
+                            FROM pets p
+                            JOIN owners o ON p.ownerId = o.id
+                            WHERE p.id = @petId";
 
                     using (var command = new MySqlCommand(query, connection))
                     {
@@ -96,6 +103,12 @@ namespace Vet_System.Services
                                 imageUrl = reader["imageUrl"].ToString();
                             }
 
+                            DateTime nextAppointmentDate = DateTime.MinValue;
+                            if (reader.HasColumn("nextAppointmentDate") && !reader.IsDBNull(reader.GetOrdinal("nextAppointmentDate")))
+                            {
+                                nextAppointmentDate = Convert.ToDateTime(reader["nextAppointmentDate"]);
+                            }
+
                             return new PetItem(
                                 reader["id"].ToString(),
                                 reader["name"].ToString(),
@@ -104,7 +117,8 @@ namespace Vet_System.Services
                                 Convert.ToDateTime(reader["dateOfBirth"]),
                                 reader["ownerId"].ToString(),
                                 reader["owner"].ToString(),
-                                imageUrl
+                                imageUrl,
+                                nextAppointmentDate
                             );
                         }
                     }
@@ -130,11 +144,11 @@ namespace Vet_System.Services
                     await connection.OpenAsync();
 
                     string query = @"
-                        SELECT p.id, p.name, p.species, p.breed, p.dateOfBirth, 
-                               p.ownerId, o.name as owner, p.imageUrl
-                        FROM pets p
-                        JOIN owners o ON p.ownerId = o.id
-                        ORDER BY p.name";
+                            SELECT p.id, p.name, p.species, p.breed, p.dateOfBirth,
+                                   p.ownerId, o.name as owner, p.imageUrl, p.nextAppointmentDate
+                            FROM pets p
+                            JOIN owners o ON p.ownerId = o.id
+                            ORDER BY p.name";
 
                     using (var command = new MySqlCommand(query, connection))
                     {
@@ -149,6 +163,12 @@ namespace Vet_System.Services
                                 imageUrl = reader["imageUrl"].ToString();
                             }
 
+                            DateTime nextAppointmentDate = DateTime.MinValue;
+                            if (reader.HasColumn("nextAppointmentDate") && !reader.IsDBNull(reader.GetOrdinal("nextAppointmentDate")))
+                            {
+                                nextAppointmentDate = Convert.ToDateTime(reader["nextAppointmentDate"]);
+                            }
+
                             pets.Add(new PetItem(
                                 reader["id"].ToString(),
                                 reader["name"].ToString(),
@@ -157,7 +177,8 @@ namespace Vet_System.Services
                                 Convert.ToDateTime(reader["dateOfBirth"]),
                                 reader["ownerId"].ToString(),
                                 reader["owner"].ToString(),
-                                imageUrl
+                                imageUrl,
+                                nextAppointmentDate
                             ));
                         }
                     }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows.Input;
 
 namespace Vet_System.Models
 {
@@ -13,6 +12,7 @@ namespace Vet_System.Models
         public string OwnerId { get; set; }
         public string Owner { get; set; }
         public string ImageUrl { get; set; }
+        public DateTime NextAppointmentDate { get; set; }
 
         public PetItem
             (
@@ -23,7 +23,9 @@ namespace Vet_System.Models
                 DateTime dateOfBirth,
                 string ownerId,
                 string owner,
-                string imageUrl
+                string imageUrl,
+                DateTime nextAppointmentDate
+
             )
         {
             Id = id;
@@ -34,6 +36,7 @@ namespace Vet_System.Models
             OwnerId = ownerId;
             Owner = owner;
             ImageUrl = imageUrl;
+            NextAppointmentDate = nextAppointmentDate;
         }
     }
 }

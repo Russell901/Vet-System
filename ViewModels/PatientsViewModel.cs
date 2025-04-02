@@ -157,7 +157,8 @@ namespace Vet_System.ViewModels
                         dateOfBirth: birthDate,
                         ownerId: string.Empty,
                         owner: viewModel.OwnerName,
-                        imageUrl: imagePath
+                        imageUrl: imagePath,
+                        nextAppointmentDate: DateTime.Now
                     );
 
                     var ownerInfo = new OwnerInfo
@@ -185,23 +186,6 @@ namespace Vet_System.ViewModels
                 await _dialogService.ShowErrorAsync("Error",
                     "Unable to show the Add Patient dialog. Please try again.");
             }
-        }
-
-        private string CalculateAge(DateTimeOffset? birthDate)
-        {
-            if (!birthDate.HasValue)
-                return "Unknown";
-
-            var today = DateTimeOffset.Now;
-            var age = today.Year - birthDate.Value.Year;
-
-            if (today.Month < birthDate.Value.Month ||
-                (today.Month == birthDate.Value.Month && today.Day < birthDate.Value.Day))
-            {
-                age--;
-            }
-
-            return age == 1 ? "1 year" : $"{age} years";
         }
 
         private async Task SaveNewPetAsync(PetItem newPet)
@@ -237,6 +221,49 @@ namespace Vet_System.ViewModels
                 Debug.WriteLine($"Error loading pets: {ex.Message}");
                 await _dialogService.ShowErrorAsync("Error",
                     "Unable to load pets from database.");
+            }
+        }
+
+        [RelayCommand]
+        private async Task ViewPetDetailsAsync(string petId)
+        {
+            try
+            {
+                if (_xamlRoot == null)
+                {
+                    if (_mainWindow?.Content is FrameworkElement element)
+                    {
+                        _xamlRoot = element.XamlRoot;
+                        _dialogService?.UpdateXamlRoot(_xamlRoot);
+                    }
+
+                    if (_xamlRoot == null)
+                    {
+                        Debug.WriteLine("Error: Unable to get XamlRoot from window or page");
+                        await _dialogService.ShowErrorAsync("Error", "Cannot show dialog - XamlRoot not set");
+                        return;
+                    }
+                }
+
+                var petDetailsDialog = new PetDetailsDialog(petId, _xamlRoot);
+
+                var dialog = new ContentDialog
+                {
+                    XamlRoot = _xamlRoot,
+                    Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                    Title = "Pet Details",
+                    CloseButtonText = "Close",
+                    DefaultButton = ContentDialogButton.Close,
+                    Content = petDetailsDialog
+                };
+
+                await dialog.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error showing pet details: {ex.Message}");
+                await _dialogService.ShowErrorAsync("Error",
+                    "Unable to display pet details. Please try again.");
             }
         }
 

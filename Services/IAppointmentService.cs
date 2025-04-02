@@ -15,5 +15,6 @@ namespace Vet_System.Services
         Task<bool> CancelAppointmentAsync(string appointmentId);
 
         Task<AppointmentItem> GetAppointmentByIdAsync(string appointmentId);
+
     }
 }

@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Vet_System.Components.Dialogs.PetDetailsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Vet_System.Components.Dialogs"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:Vet_System.Converters"
+    mc:Ignorable="d">
+
+    <Grid MinWidth="600" MaxWidth="800">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header with Pet Image and Basic Info -->
+        <Grid Grid.Row="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Pet Image -->
+            <Border Width="120" Height="120" CornerRadius="60" Margin="0,0,24,0">
+                <Border.Background>
+                    <ImageBrush ImageSource="{x:Bind ViewModel.Pet.ImageUrl, Mode=OneWay, Converter={StaticResource UriToImageSourceConverter}}" Stretch="UniformToFill"/>
+                </Border.Background>
+            </Border>
+
+            <!-- Pet Basic Info -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                <TextBlock Text="{x:Bind ViewModel.Pet.Name, Mode=OneWay}"
+                           Style="{ThemeResource TitleLargeTextBlockStyle}"/>
+                <Expander Header="Pet &amp; Owner Details" IsExpanded="True" Margin="0,0,0,16">
+
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{x:Bind ViewModel.Pet.Species, Mode=OneWay, Converter={StaticResource CapitalizeConverter}}"
+                                   Style="{ThemeResource BodyTextBlockStyle}"/>
+                            <TextBlock Text="|" Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{x:Bind ViewModel.Pet.Breed, Mode=OneWay}"
+                                   Style="{ThemeResource BodyTextBlockStyle}"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Age:" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock Text="{x:Bind ViewModel.Age, Mode=OneWay}"
+                                   Style="{ThemeResource BodyTextBlockStyle}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+        </Grid>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Margin="0,0,0,0">
+            <StackPanel Padding="24">
+                <!-- Pet & Owner Details -->
+                <Expander Header="Pet &amp; Owner Details" IsExpanded="True" Margin="0,0,0,16">
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Pet Details -->
+                        <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,16,16" Spacing="8">
+                            <TextBlock Text="Pet Details" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Birth Date:" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Pet.DateOfBirth, Mode=OneWay, Converter={StaticResource DateFormatConverter}}"/>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Species:" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Pet.Species, Mode=OneWay, Converter={StaticResource CapitalizeConverter}}"/>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Breed:" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Pet.Breed, Mode=OneWay}"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Owner Details -->
+                        <StackPanel Grid.Column="1" Grid.Row="0" Margin="0,0,0,16" Spacing="8">
+                            <TextBlock Text="Owner Details" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Name:" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Owner.Name, Mode=OneWay}"/>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Phone:" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Owner.Phone, Mode=OneWay}"/>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Email:" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Owner.Email, Mode=OneWay}"/>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Address:" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Owner.Address, Mode=OneWay}" TextWrapping="Wrap"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Pet Notes -->
+                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Spacing="8" Margin="0,0,0,8">
+                            <TextBlock Text="Notes" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                            <TextBlock Text="{x:Bind ViewModel.Notes, Mode=OneWay}" 
+                                       TextWrapping="Wrap" 
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Visibility="{x:Bind ViewModel.HasNotes, Mode=OneWay}"/>
+                            <TextBlock Text="No notes available." 
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Visibility="{x:Bind ViewModel.HasNotes, Mode=OneWay, Converter={StaticResource NotVisibilityConverter}}"/>
+                        </StackPanel>
+                    </Grid>
+                </Expander>
+
+                <!-- Upcoming Appointments -->
+                <Expander Header="Upcoming Appointments" IsExpanded="True" Margin="0,0,0,16">
+                    <Grid Margin="0,12,0,0">
+                        <ListView ItemsSource="{x:Bind ViewModel.UpcomingAppointments, Mode=OneWay}" 
+                                  MinHeight="100"
+                                  MaxHeight="200"
+                                  SelectionMode="None"
+                                  Visibility="{x:Bind ViewModel.HasUpcomingAppointments, Mode=OneWay}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}" 
+                                                CornerRadius="12" 
+                                                Padding="8,4" 
+                                                HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding Date}" 
+                                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" 
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="1" 
+                                                   Text="{Binding Reason}" 
+                                                   VerticalAlignment="Center" 
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <TextBlock Text="No upcoming appointments." 
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Visibility="{x:Bind ViewModel.HasUpcomingAppointments, Mode=OneWay, Converter={StaticResource NotVisibilityConverter}}"/>
+                    </Grid>
+                </Expander>
+
+                <!-- Appointment History -->
+                <Expander Header="Appointment History" IsExpanded="True">
+                    <Grid Margin="0,12,0,0">
+                        <ListView ItemsSource="{x:Bind ViewModel.AppointmentHistory, Mode=OneWay}" 
+                                  MinHeight="100"
+                                  MaxHeight="200"
+                                  SelectionMode="None"
+                                  Visibility="{x:Bind ViewModel.HasAppointmentHistory, Mode=OneWay}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Background="{ThemeResource SystemFillColorNeutralBackground}" 
+                                                CornerRadius="12" 
+                                                Padding="8,4" 
+                                                HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding Date}" 
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="1" 
+                                                   Text="{Binding Reason}" 
+                                                   VerticalAlignment="Center" 
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <TextBlock Text="No appointment history." 
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Visibility="{x:Bind ViewModel.HasAppointmentHistory, Mode=OneWay, Converter={StaticResource NotVisibilityConverter}}"/>
+                    </Grid>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

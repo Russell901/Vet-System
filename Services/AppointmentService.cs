@@ -386,5 +386,12 @@ namespace Vet_System.Services
                 // Just log the error but don't throw - this is secondary functionality
             }
         }
+
+        private async Task UpdatePetNextAppointmentAsync(MySqlConnection connection, int petId)
+        {
+            await UpdatePetNextAppointmentAsync(connection, petId, null);
+        }
+
+
     }
 }
